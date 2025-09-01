@@ -4,14 +4,43 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.value]: e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.prevenDefault();
-    console.group("Datos enciados", form);
-    // aqui despues conectamos al bakend
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch("http://localhost:4000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // Guardamos token y correo
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("email", form.email);
+
+        alert("Login exitoso ✅");
+
+        // Verificar si es admin
+        if (form.email === "admin@empresa.com") {
+          window.location.href = "/dashboardAdmin";
+        } else {
+          window.location.href = "/dashboardUser";
+        }
+      } else {
+        alert(data.message || "Error en el login ❌");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error de conexión con el servidor");
+    }
   };
+
   return (
     <div className="d-flex align-items-center justify-content-center vh-100 bg-light">
       <div

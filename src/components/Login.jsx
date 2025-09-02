@@ -15,7 +15,6 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Usamos variable de entorno para la URL del backend
       const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
 
       const res = await fetch(`${API_URL}/api/auth/login`, {
@@ -28,6 +27,7 @@ export default function Login() {
 
       if (!res.ok) {
         alert(data.message || "Error en el login ❌");
+        setLoading(false);
         return;
       }
 
@@ -35,13 +35,13 @@ export default function Login() {
       localStorage.setItem("token", data.token);
       if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
 
-      // Detecta el rol
+      // Detecta rol
       const rol =
         (data.rol || data.role || data.user?.rol || data.user?.role || "").toLowerCase();
 
       const email = (data.user?.email || form.email || "").toLowerCase();
 
-      // Reglas de redirección
+      // Redirección
       if (rol === "trabajador" || rol === "empleado") {
         navigate("/dashboardUser");
       } else if (rol === "admin" || email === "admin@empresa.com") {
@@ -51,7 +51,7 @@ export default function Login() {
       }
     } catch (error) {
       console.error(error);
-      alert("Error de conexión con el servidor");
+      alert("Error de conexión con el servidor ❌");
     } finally {
       setLoading(false);
     }

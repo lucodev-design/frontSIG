@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./components/Login";
 import DashboardUser from "./pages/dashboardUser";
 import DashboardAdmin from "./pages/dashboardAdmin";
+import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   return (
@@ -11,8 +12,10 @@ function App() {
       <Routes>
         {/* 👇 Por defecto "/" muestra el login */}
         <Route path="/" element={<Login />} />
-        <Route path="/dashboardUser" element={<DashboardUser />} />
-        <Route path="/dashboardAdmin" element={<DashboardAdmin />} />
+        <Route path="/dashboardAdmin" element={
+          <PrivateRoute><DashboardAdmin /></PrivateRoute>} />
+        <Route path="/dashboardUser" element={
+          <PrivateRoute><DashboardUser /></PrivateRoute>} />        
       </Routes>
     </Router>
   );

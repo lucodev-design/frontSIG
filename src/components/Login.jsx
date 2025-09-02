@@ -20,14 +20,13 @@ export default function Login() {
       const data = await res.json();
 
       if (res.ok) {
-        // Guardamos token y correo
         localStorage.setItem("token", data.token);
-        localStorage.setItem("email", form.email);
+        localStorage.setItem("rol", data.rol);
 
         alert("Login exitoso ✅");
 
-        // Verificar si es admin
-        if (form.email === "admin@empresa.com") {
+        // Redirigir según el rol
+        if (data.rol === "admin") {
           window.location.href = "/dashboardAdmin";
         } else {
           window.location.href = "/dashboardUser";

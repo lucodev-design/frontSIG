@@ -2,6 +2,9 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+// importamos el componente para destruir la sesion
+import LogoutButton from "../components/logout";
+
 export default function DashboardAdmin() {
   const navigate = useNavigate();
 
@@ -25,6 +28,8 @@ export default function DashboardAdmin() {
         }}
       >
         Cerrar sesión
+        {/* colocamos el boton para cerrar la sesion */}
+        <LogoutButton/>
       </button>
     </div>
   );

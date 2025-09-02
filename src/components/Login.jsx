@@ -15,7 +15,10 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:4000/api/auth/login", {
+      // Usamos variable de entorno para la URL del backend
+      const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
+
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -28,11 +31,11 @@ export default function Login() {
         return;
       }
 
-      // Guarda token y (opcional) info de usuario
+      // Guardar token y info del usuario
       localStorage.setItem("token", data.token);
       if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
 
-      // Detecta el rol de forma flexible (según lo que envíe tu backend)
+      // Detecta el rol
       const rol =
         (data.rol || data.role || data.user?.rol || data.user?.role || "").toLowerCase();
 
@@ -44,7 +47,6 @@ export default function Login() {
       } else if (rol === "admin" || email === "admin@empresa.com") {
         navigate("/dashboardAdmin");
       } else {
-        // Si no hay rol claro, mándalo al user por defecto
         navigate("/dashboardUser");
       }
     } catch (error) {

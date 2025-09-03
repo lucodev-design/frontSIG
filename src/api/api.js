@@ -1,5 +1,5 @@
 // src/api/api.js
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
+const API_URL = impor.meta.env.VITE_APP_UR || "http://localhost:4000";
 
 // Helper para manejar errores de respuesta
 async function handleResponse(res) {

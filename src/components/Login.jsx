@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { loginUser } from "../api/api"; // 👈 importamos nuestra API
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -15,33 +16,18 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
+      const data = await loginUser(form); // 👈 aquí usamos api.js
 
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || "Error en el login ❌");
-        setLoading(false);
-        return;
-      }
-
-      // Guardar token y info del usuario
+      // Guardar token y user
       localStorage.setItem("token", data.token);
       if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
 
-      // Detecta rol
+      // Redirección según rol
       const rol =
         (data.rol || data.role || data.user?.rol || data.user?.role || "").toLowerCase();
 
       const email = (data.user?.email || form.email || "").toLowerCase();
 
-      // Redirección
       if (rol === "trabajador" || rol === "empleado") {
         navigate("/dashboardUser");
       } else if (rol === "admin" || email === "admin@empresa.com") {
@@ -49,9 +35,8 @@ export default function Login() {
       } else {
         navigate("/dashboardUser");
       }
-    } catch (error) {
-      console.error(error);
-      alert("Error de conexión con el servidor ❌");
+    } catch (err) {
+      alert(err.message || "Error en el login ❌");
     } finally {
       setLoading(false);
     }

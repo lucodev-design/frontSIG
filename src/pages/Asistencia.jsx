@@ -1,28 +1,55 @@
-import { useState } from "react";
-import QrReader from "react-qr-reader";
+import { useEffect, useRef, useState } from "react";
+import QrScanner from "qr-scanner";
 
 export default function Asistencia() {
   const [mensaje, setMensaje] = useState("");
   const [usuario, setUsuario] = useState(null);
+  const videoRef = useRef(null);
+  const scannerRef = useRef(null);
 
-  const manejarEscaneo = async (data) => {
-    if (data) {
-      // Obtener ubicación del dispositivo
-      navigator.geolocation.getCurrentPosition(async (pos) => {
-        const ubicacion = `${pos.coords.latitude},${pos.coords.longitude}`;
+  useEffect(() => {
+    if (videoRef.current) {
+      const scanner = new QrScanner(
+        videoRef.current,
+        async (result) => {
+          if (result) {
+            // Obtener ubicación del dispositivo
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+              const ubicacion = `${pos.coords.latitude},${pos.coords.longitude}`;
 
-        const res = await fetch("http://localhost:4000/api/asistencia/marcar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ qr: data, ubicacion }),
-        });
+              try {
+                const res = await fetch(
+                  "http://localhost:4000/api/asistencia/marcar",
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ qr: result.data, ubicacion }),
+                  }
+                );
 
-        const info = await res.json();
-        setMensaje(info.mensaje);
-        setUsuario(info.usuario || null);
-      });
+                const info = await res.json();
+                setMensaje(info.mensaje);
+                setUsuario(info.usuario || null);
+              } catch (error) {
+                console.error("Error al enviar asistencia:", error);
+              }
+            });
+          }
+        },
+        {
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+        }
+      );
+
+      scanner.start();
+      scannerRef.current = scanner;
+
+      return () => {
+        scanner.stop();
+      };
     }
-  };
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100">
@@ -31,12 +58,8 @@ export default function Asistencia() {
       </h1>
 
       <div className="bg-white shadow-lg rounded-2xl p-6 w-96 flex flex-col items-center">
-        <QrReader
-          delay={300}
-          onScan={manejarEscaneo}
-          onError={(err) => console.error(err)}
-          style={{ width: "100%" }}
-        />
+        {/* Video de la cámara */}
+        <video ref={videoRef} style={{ width: "100%" }} />
 
         {usuario && (
           <p className="mt-4 text-gray-700">

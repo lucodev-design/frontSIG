@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import QrScanner from "qr-scanner";
+import Login from "../components/Login";
 
 const API_URL = import.meta.env.VITE_API_URL; // 👉 ahora usa la variable
 
@@ -70,6 +71,8 @@ export default function Asistencia() {
           onClick={() => (window.location.href = "/login")}
           className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
         >
+            {/* iniciar sesion login */}
+            <Login/>
           Iniciar sesión
         </button>
       </div>

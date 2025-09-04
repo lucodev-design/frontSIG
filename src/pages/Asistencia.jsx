@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import QrScanner from "qr-scanner";
 
+const API_URL = import.meta.env.VITE_API_URL; // 👉 ahora usa la variable
+
 export default function Asistencia() {
   const [mensaje, setMensaje] = useState("");
   const [usuario, setUsuario] = useState(null);
@@ -13,19 +15,15 @@ export default function Asistencia() {
         videoRef.current,
         async (result) => {
           if (result) {
-            // Obtener ubicación del dispositivo
             navigator.geolocation.getCurrentPosition(async (pos) => {
               const ubicacion = `${pos.coords.latitude},${pos.coords.longitude}`;
 
               try {
-                const res = await fetch(
-                  "http://localhost:4000/api/asistencia/marcar",
-                  {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ qr: result.data, ubicacion }),
-                  }
-                );
+                const res = await fetch(`${API_URL}/api/asistencia/marcar`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ qr: result.data, ubicacion }),
+                });
 
                 const info = await res.json();
                 setMensaje(info.mensaje);
@@ -58,7 +56,6 @@ export default function Asistencia() {
       </h1>
 
       <div className="bg-white shadow-lg rounded-2xl p-6 w-96 flex flex-col items-center">
-        {/* Video de la cámara */}
         <video ref={videoRef} style={{ width: "100%" }} />
 
         {usuario && (

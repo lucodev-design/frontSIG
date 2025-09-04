@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import QrScanner from "qr-scanner";
-import Login from "../components/Login";
 
-const API_URL = import.meta.env.VITE_API_URL; // 👉 ahora usa la variable
+const API_URL = import.meta.env.VITE_API_URL; // 👉 variable de entorno
 
 export default function Asistencia() {
   const [mensaje, setMensaje] = useState("");
   const [usuario, setUsuario] = useState(null);
+  const [escaneando, setEscaneando] = useState(true);
   const videoRef = useRef(null);
   const scannerRef = useRef(null);
 
@@ -16,6 +16,8 @@ export default function Asistencia() {
         videoRef.current,
         async (result) => {
           if (result) {
+            setEscaneando(false); // pausa el escaneo mientras procesa
+
             navigator.geolocation.getCurrentPosition(async (pos) => {
               const ubicacion = `${pos.coords.latitude},${pos.coords.longitude}`;
 
@@ -31,6 +33,9 @@ export default function Asistencia() {
                 setUsuario(info.usuario || null);
               } catch (error) {
                 console.error("Error al enviar asistencia:", error);
+                setMensaje("❌ Error al registrar asistencia");
+              } finally {
+                setTimeout(() => setEscaneando(true), 3000); // reanudar escaneo
               }
             });
           }
@@ -51,30 +56,47 @@ export default function Asistencia() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">
-        Registro de Asistencia
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-gray-100 to-gray-200 p-6">
+      <h1 className="text-4xl font-extrabold mb-6 text-gray-800 tracking-wide">
+        📌 Registro de Asistencia
       </h1>
 
-      <div className="bg-white shadow-lg rounded-2xl p-6 w-96 flex flex-col items-center">
-        <video ref={videoRef} style={{ width: "100%" }} />
+      <div className="bg-white shadow-2xl rounded-2xl p-6 w-full max-w-md flex flex-col items-center transition-transform duration-300 hover:scale-105">
+        {/* Video de la cámara */}
+        <div className="w-full border-2 border-dashed border-gray-300 rounded-xl overflow-hidden">
+          <video ref={videoRef} className="w-full" />
+        </div>
 
         {usuario && (
-          <p className="mt-4 text-gray-700">
-            Usuario: <span className="font-semibold">{usuario.nombre}</span>
-          </p>
+          <div className="mt-4 text-center">
+            <p className="text-gray-700">
+              Usuario: <span className="font-semibold">{usuario.nombre}</span>
+            </p>
+          </div>
         )}
 
-        <p className="mt-2 text-green-600 font-semibold">{mensaje}</p>
+        <p
+          className={`mt-3 font-semibold text-center transition-all ${
+            mensaje.includes("Error") || mensaje.includes("❌")
+              ? "text-red-600"
+              : "text-green-600"
+          }`}
+        >
+          {mensaje}
+        </p>
 
         <button
           onClick={() => (window.location.href = "/login")}
-          className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+          className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all"
         >
-            {/* iniciar sesion login */}
-            <Login/>
-          Iniciar sesión
+          🔑 Ir a Login
         </button>
+
+        {!escaneando && (
+          <p className="text-sm text-gray-500 mt-2 animate-pulse">
+            Procesando escaneo...
+          </p>
+        )}
       </div>
     </div>
   );

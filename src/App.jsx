@@ -6,7 +6,7 @@ import DashboardUser from "./pages/dashboardUser";
 import DashboardAdmin from "./pages/dashboardAdmin";
 import PrivateRoute from "./components/PrivateRoute";
 import Asistencia from "./pages/Asistencia";   // página de asistencia con QR
-import AddUsuario from "./pages/AddUsuario";   // 👈 nuevo componente para registrar usuarios
+import AddUsuario from "./components/AddUsuario";   // 👈 nuevo componente para registrar usuarios
 
 function App() {
   return (

@@ -1,26 +1,28 @@
-import { useEffect, useRef, useState } from "react";
+// Asistencia.jsx
+import React, { useEffect, useRef, useState } from "react";
 import QrScanner from "qr-scanner";
 
-const API_URL = import.meta.env.VITE_API_URL; // 👉 variable de entorno
+const API_URL = import.meta.env.VITE_API_URL;
 
-export default function Asistencia() {
-  const [mensaje, setMensaje] = useState("");
-  const [usuario, setUsuario] = useState(null);
-  const [escaneando, setEscaneando] = useState(true);
+const Asistencia = () => {
   const videoRef = useRef(null);
   const scannerRef = useRef(null);
 
+  const [mensaje, setMensaje] = useState("");
+  const [usuario, setUsuario] = useState(null);
+  const [codigoQR, setCodigoQR] = useState("");
+
   useEffect(() => {
-    if (videoRef.current) {
-      const scanner = new QrScanner(
+    if (videoRef.current && !scannerRef.current) {
+      scannerRef.current = new QrScanner(
         videoRef.current,
         async (result) => {
           if (result) {
-            setEscaneando(false); // pausa el escaneo mientras procesa
+            setCodigoQR(result.data);
 
+            // Geolocalización y envío de asistencia
             navigator.geolocation.getCurrentPosition(async (pos) => {
               const ubicacion = `${pos.coords.latitude},${pos.coords.longitude}`;
-
               try {
                 const res = await fetch(`${API_URL}/api/asistencia/marcar`, {
                   method: "POST",
@@ -32,10 +34,8 @@ export default function Asistencia() {
                 setMensaje(info.mensaje);
                 setUsuario(info.usuario || null);
               } catch (error) {
-                console.error("Error al enviar asistencia:", error);
+                console.error("Error al registrar asistencia:", error);
                 setMensaje("❌ Error al registrar asistencia");
-              } finally {
-                setTimeout(() => setEscaneando(true), 3000); // reanudar escaneo
               }
             });
           }
@@ -43,61 +43,67 @@ export default function Asistencia() {
         {
           highlightScanRegion: true,
           highlightCodeOutline: true,
+          maxScansPerSecond: 1,
         }
       );
-
-      scanner.start();
-      scannerRef.current = scanner;
-
-      return () => {
-        scanner.stop();
-      };
+      scannerRef.current.start();
     }
+
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.destroy();
+        scannerRef.current = null;
+      }
+    };
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-gray-100 to-gray-200 p-6">
-      <h1 className="text-4xl font-extrabold mb-6 text-gray-800 tracking-wide">
-        📌 Registro de Asistencia
-      </h1>
+    <div className="container mt-5">
+      <h2 className="text-center mb-4">📌 Registro de Asistencia</h2>
 
-      <div className="bg-white shadow-2xl rounded-2xl p-6 w-full max-w-md flex flex-col items-center transition-transform duration-300 hover:scale-105">
-        {/* Video de la cámara */}
-        <div className="w-full border-2 border-dashed border-gray-300 rounded-xl overflow-hidden">
-          <video ref={videoRef} className="w-full" />
+      <div className="card shadow-lg">
+        <div className="card-body text-center">
+          {/* Video cámara */}
+          <video ref={videoRef} style={{ width: "100%" }} muted></video>
+
+          {/* Mensaje */}
+          {mensaje && (
+            <div
+              className={`alert mt-3 ${
+                mensaje.includes("Error") || mensaje.includes("❌")
+                  ? "alert-danger"
+                  : "alert-success"
+              }`}
+            >
+              {mensaje}
+            </div>
+          )}
+
+          {/* Usuario */}
+          {usuario && (
+            <div className="alert alert-info mt-2">
+              Usuario: <strong>{usuario.nombre}</strong>
+            </div>
+          )}
+
+          {/* Código QR leído */}
+          {codigoQR && (
+            <div className="alert alert-secondary mt-2">
+              <strong>QR leído:</strong> {codigoQR}
+            </div>
+          )}
+
+          {/* Botón Login */}
+          <button
+            onClick={() => (window.location.href = "/login")}
+            className="btn btn-primary mt-3"
+          >
+            🔑 Ir a Login
+          </button>
         </div>
-
-        {usuario && (
-          <div className="mt-4 text-center">
-            <p className="text-gray-700">
-              Usuario: <span className="font-semibold">{usuario.nombre}</span>
-            </p>
-          </div>
-        )}
-
-        <p
-          className={`mt-3 font-semibold text-center transition-all ${
-            mensaje.includes("Error") || mensaje.includes("❌")
-              ? "text-red-600"
-              : "text-green-600"
-          }`}
-        >
-          {mensaje}
-        </p>
-
-        <button
-          onClick={() => (window.location.href = "/login")}
-          className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all"
-        >
-          🔑 Ir a Login
-        </button>
-
-        {!escaneando && (
-          <p className="text-sm text-gray-500 mt-2 animate-pulse">
-            Procesando escaneo...
-          </p>
-        )}
       </div>
     </div>
   );
-}
+};
+
+export default Asistencia;

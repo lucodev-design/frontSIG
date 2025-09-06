@@ -5,7 +5,8 @@ import Login from "./components/Login";
 import DashboardUser from "./pages/dashboardUser";
 import DashboardAdmin from "./pages/dashboardAdmin";
 import PrivateRoute from "./components/PrivateRoute";
-import Asistencia from "./pages/Asistencia";   // 👈 nueva página para asistencia con QR
+import Asistencia from "./pages/Asistencia";   // página de asistencia con QR
+import AddUsuario from "./pages/AddUsuario";   // 👈 nuevo componente para registrar usuarios
 
 function App() {
   return (
@@ -31,6 +32,16 @@ function App() {
           element={
             <PrivateRoute>
               <DashboardUser />
+            </PrivateRoute>
+          }
+        />
+
+        {/* 👇 Ruta para registrar nuevo usuario */}
+        <Route
+          path="/add-usuario"
+          element={
+            <PrivateRoute>
+              <AddUsuario />
             </PrivateRoute>
           }
         />

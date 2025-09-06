@@ -34,7 +34,9 @@ const DashboardAdmin = () => {
               <Card.Text>
                 Administra las cuentas de empleados y sus permisos.
               </Card.Text>
-              <Button variant="primary">Ver Usuarios</Button>
+              <Button variant="primary" onClick={() => navigate("/add-usuario")}>
+                ➕ Agregar Usuario
+              </Button>
             </Card.Body>
           </Card>
         </Col>

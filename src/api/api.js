@@ -31,6 +31,18 @@ export async function registerUser(userData) {
   });
   return handleResponse(res);
 }
+// Listar datos
+// Obtener todos los usuarios
+export async function getUsers() {
+  const res = await fetch(`${API_URL}/api/auth/users`);
+  return handleResponse(res);
+}
+
+
+
+
+
+
 
 // Verificar token
 export async function verifyToken(token) {

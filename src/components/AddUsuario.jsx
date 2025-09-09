@@ -1,15 +1,32 @@
-import React, { useState } from "react";
-import { registerUser } from "../api/api"; // Importamos la función del helper
+import React, { useState, useEffect } from "react";
+import { registerUser, getUsers } from "../api/api";
+import DataTable from "react-data-table-component";
 
 function AddUsuarios() {
   const [formData, setFormData] = useState({
     nombre: "",
     email: "",
     password: "",
-    rol: "trabajador", // por defecto trabajador
+    rol: "trabajador",
   });
 
   const [mensaje, setMensaje] = useState("");
+  const [usuarios, setUsuarios] = useState([]); // lista de trabajadores
+
+  // Cargar usuarios al iniciar
+  useEffect(() => {
+    cargarUsuarios();
+  }, []);
+
+  const cargarUsuarios = async () => {
+    try {
+      const data = await getUsers();
+      // Filtrar solo trabajadores
+      setUsuarios(data.filter((u) => u.rol === "trabajador"));
+    } catch (error) {
+      console.error("Error al obtener usuarios:", error);
+    }
+  };
 
   // Manejo de inputs
   const handleChange = (e) => {
@@ -25,7 +42,7 @@ function AddUsuarios() {
     setMensaje("");
 
     try {
-      await registerUser(formData); // Usamos la función centralizada
+      await registerUser(formData);
       setMensaje("✅ Usuario registrado correctamente");
 
       // limpiar formulario
@@ -35,15 +52,25 @@ function AddUsuarios() {
         password: "",
         rol: "trabajador",
       });
+
+      // recargar lista
+      cargarUsuarios();
     } catch (error) {
       console.error("Error al registrar usuario:", error);
       setMensaje(`❌ ${error.message}`);
     }
   };
 
+  // Columnas de la tabla
+  const columnas = [
+    { name: "Nombre", selector: (row) => row.nombre, sortable: true },
+    { name: "Correo", selector: (row) => row.email, sortable: true },
+    { name: "Rol", selector: (row) => row.rol, sortable: true },
+  ];
+
   return (
-    <div className="p-6 max-w-md mx-auto bg-white rounded-xl shadow-lg">
-      <h2 className="text-xl font-bold mb-4">Registrar Usuario</h2>
+    <div className="p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg">
+      <h2 className="text-xl font-bold mb-4">Registrar Trabajador</h2>
 
       {mensaje && (
         <p
@@ -55,7 +82,8 @@ function AddUsuarios() {
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {/* Formulario */}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 mb-6">
         <input
           type="text"
           name="nombre"
@@ -86,6 +114,7 @@ function AddUsuarios() {
           className="p-2 border rounded"
         />
 
+        {/* Fijo en trabajador, pero igual lo dejamos en select */}
         <select
           name="rol"
           value={formData.rol}
@@ -103,6 +132,17 @@ function AddUsuarios() {
           Registrar
         </button>
       </form>
+
+      {/* DataTable */}
+      <h3 className="text-lg font-semibold mb-2">Lista de Trabajadores</h3>
+      <DataTable
+        columns={columnas}
+        data={usuarios}
+        pagination
+        highlightOnHover
+        striped
+        noDataComponent="⚠️ No hay trabajadores registrados"
+      />
     </div>
   );
 }

@@ -1,73 +1,58 @@
 // src/api/api.js
-const API_URL = import.meta.env.VITE_APP_URL;
-// const API_URL = import.meta.env.VITE_APP_URL || "http://localhost:4000"; solo si se trabajara en local
 
-// Helper para manejar respuestas y errores
-async function handleResponse(res) {
-  let data;
+// URL del backend
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
+// Registrar usuario
+export async function registerUser(userData) {
   try {
-    data = await res.json();
-  } catch {
-    throw new Error("Respuesta no válida del servidor");
-  }
+    const res = await fetch(`${API_URL}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData),
+    });
 
-  if (!res.ok) {
-    throw new Error(data.message || "Error en la petición");
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "Error al registrar usuario");
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error("❌ Error en registerUser:", error);
+    throw error;
   }
-  return data;
 }
 
-// ------------------ AUTH ------------------
+// Listar usuarios
+export async function getUsers() {
+  try {
+    const res = await fetch(`${API_URL}/api/auth/users`);
+    if (!res.ok) throw new Error("Error al obtener usuarios");
+    return res.json();
+  } catch (error) {
+    console.error("❌ Error en getUsers:", error);
+    throw error;
+  }
+}
 
 // Login
 export async function loginUser(credentials) {
-  const res = await fetch(`${API_URL}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(credentials),
-  });
-  return handleResponse(res);
-}
+  try {
+    const res = await fetch(`${API_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(credentials),
+    });
 
-// Registro de usuario
-export async function registerUser(userData) {
-  const res = await fetch(`${API_URL}/api/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(userData),
-  });
-  return handleResponse(res);
-}
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "Error al iniciar sesión");
+    }
 
-// Obtener todos los usuarios
-export async function getUsers() {
-  const res = await fetch(`${API_URL}/api/auth/users`);
-  return handleResponse(res);
-}
-
-// Verificar token
-export async function verifyToken(token) {
-  const res = await fetch(`${API_URL}/api/auth/verify`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return handleResponse(res);
-}
-
-// ------------------ ASISTENCIA ------------------
-
-// Marcar asistencia con QR
-export async function marcarAsistencia(qrCode) {
-  const res = await fetch(`${API_URL}/api/asistencia/marcar`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ codigo_qr: qrCode }),
-  });
-  return handleResponse(res);
-}
-
-// ------------------ EJEMPLO EXTRA ------------------
-// Llamada a test-db para verificar conexión
-export async function testDb() {
-  const res = await fetch(`${API_URL}/api/test-db`);
-  return handleResponse(res);
+    return res.json();
+  } catch (error) {
+    console.error("❌ Error en loginUser:", error);
+    throw error;
+  }
 }

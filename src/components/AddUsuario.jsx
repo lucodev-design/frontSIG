@@ -11,8 +11,7 @@ function AddUsuarios() {
 
   const [mensaje, setMensaje] = useState("");
   const [usuarios, setUsuarios] = useState([]);
-  const [qrCode, setQrCode] = useState(""); // QR generado tras registro
-  const [qrModal, setQrModal] = useState(""); // QR para ver en la tabla
+  const [qrCode, setQrCode] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -25,20 +24,15 @@ function AddUsuarios() {
 
     try {
       const res = await registerUser(formData);
-
       setMensaje("✅ Usuario registrado correctamente");
+
       if (res.qrImage) setQrCode(res.qrImage);
 
-      setFormData({
-        nombre: "",
-        email: "",
-        password: "",
-        rol: "trabajador",
-      });
+      setFormData({ nombre: "", email: "", password: "", rol: "trabajador" });
 
-      fetchUsers(); // recargar lista
+      fetchUsers();
     } catch (error) {
-      console.error("Error al registrar usuario:", error);
+      console.error("❌ Error al registrar usuario:", error);
       setMensaje(`❌ ${error.message}`);
     }
   };
@@ -48,7 +42,7 @@ function AddUsuarios() {
       const data = await getUsers();
       setUsuarios(data);
     } catch (error) {
-      console.error("Error al listar usuarios:", error);
+      console.error("❌ Error al listar usuarios:", error);
     }
   };
 
@@ -76,7 +70,6 @@ function AddUsuarios() {
           required
           className="p-2 border rounded"
         />
-
         <input
           type="email"
           name="email"
@@ -86,7 +79,6 @@ function AddUsuarios() {
           required
           className="p-2 border rounded"
         />
-
         <input
           type="password"
           name="password"
@@ -96,18 +88,25 @@ function AddUsuarios() {
           required
           className="p-2 border rounded"
         />
-
-        <select name="rol" value={formData.rol} onChange={handleChange} className="p-2 border rounded">
+        <select
+          name="rol"
+          value={formData.rol}
+          onChange={handleChange}
+          className="p-2 border rounded"
+        >
           <option value="trabajador">Trabajador</option>
           <option value="admin">Administrador</option>
         </select>
 
-        <button type="submit" className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        <button
+          type="submit"
+          className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+        >
           Registrar
         </button>
       </form>
 
-      {/* Mostrar QR generado al registrar */}
+      {/* Mostrar QR */}
       {qrCode && (
         <div className="mt-6 text-center">
           <h3 className="font-bold">Código QR del Usuario</h3>
@@ -115,22 +114,6 @@ function AddUsuarios() {
           <a href={qrCode} download="usuario_qr.png" className="bg-green-600 text-white px-4 py-2 rounded">
             Descargar QR
           </a>
-        </div>
-      )}
-
-      {/* Modal para ver QR desde la lista */}
-      {qrModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg relative">
-            <button
-              className="absolute top-2 right-2 text-red-500 font-bold text-lg"
-              onClick={() => setQrModal("")}
-            >
-              X
-            </button>
-            <h3 className="text-center font-bold mb-4">Código QR</h3>
-            <img src={qrModal} alt="QR Code" className="mx-auto" />
-          </div>
         </div>
       )}
 
@@ -143,7 +126,7 @@ function AddUsuarios() {
             <th className="p-2 border">Nombre</th>
             <th className="p-2 border">Email</th>
             <th className="p-2 border">Rol</th>
-            <th className="p-2 border">Acción</th>
+            <th className="p-2 border">QR</th>
           </tr>
         </thead>
         <tbody>
@@ -155,8 +138,8 @@ function AddUsuarios() {
               <td className="p-2 border">{u.rol}</td>
               <td className="p-2 border text-center">
                 <button
-                  onClick={() => setQrModal(u.codigo_qr)}
-                  className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                  onClick={() => setQrCode(u.codigo_qr)}
+                  className="bg-gray-600 text-white px-2 py-1 rounded text-sm"
                 >
                   Ver QR
                 </button>

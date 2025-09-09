@@ -1,5 +1,5 @@
 import pool from "../db/db.js";   // conexión a PostgreSQL
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 // Controlador para registrar un nuevo usuario
 export const addUsuario = async (req, res) => {

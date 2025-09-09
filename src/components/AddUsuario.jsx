@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { registerUser, getUsers } from "../api/api";
-import DataTable from "react-data-table-component";
 
 function AddUsuarios() {
   const [formData, setFormData] = useState({
@@ -11,24 +10,9 @@ function AddUsuarios() {
   });
 
   const [mensaje, setMensaje] = useState("");
-  const [usuarios, setUsuarios] = useState([]); // lista de trabajadores
+  const [usuarios, setUsuarios] = useState([]);
+  const [qrCode, setQrCode] = useState("");
 
-  // Cargar usuarios al iniciar
-  useEffect(() => {
-    cargarUsuarios();
-  }, []);
-
-  const cargarUsuarios = async () => {
-    try {
-      const data = await getUsers();
-      // Filtrar solo trabajadores
-      setUsuarios(data.filter((u) => u.rol === "trabajador"));
-    } catch (error) {
-      console.error("Error al obtener usuarios:", error);
-    }
-  };
-
-  // Manejo de inputs
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -36,14 +20,18 @@ function AddUsuarios() {
     });
   };
 
-  // Envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje("");
+    setQrCode("");
 
     try {
-      await registerUser(formData);
+      const res = await registerUser(formData);
       setMensaje("✅ Usuario registrado correctamente");
+
+      if (res.qrCode) {
+        setQrCode(res.qrCode); // 👈 Guardamos QR
+      }
 
       // limpiar formulario
       setFormData({
@@ -53,24 +41,30 @@ function AddUsuarios() {
         rol: "trabajador",
       });
 
-      // recargar lista
-      cargarUsuarios();
+      fetchUsers(); // recargar lista
+
     } catch (error) {
       console.error("Error al registrar usuario:", error);
       setMensaje(`❌ ${error.message}`);
     }
   };
 
-  // Columnas de la tabla
-  const columnas = [
-    { name: "Nombre", selector: (row) => row.nombre, sortable: true },
-    { name: "Correo", selector: (row) => row.email, sortable: true },
-    { name: "Rol", selector: (row) => row.rol, sortable: true },
-  ];
+  const fetchUsers = async () => {
+    try {
+      const data = await getUsers();
+      setUsuarios(data);
+    } catch (error) {
+      console.error("Error al listar usuarios:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-lg">
-      <h2 className="text-xl font-bold mb-4">Registrar Trabajador</h2>
+    <div className="p-6 max-w-3xl mx-auto bg-white rounded-xl shadow-lg">
+      <h2 className="text-xl font-bold mb-4">Registrar Usuario</h2>
 
       {mensaje && (
         <p
@@ -82,8 +76,7 @@ function AddUsuarios() {
         </p>
       )}
 
-      {/* Formulario */}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 mb-6">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
           type="text"
           name="nombre"
@@ -114,7 +107,6 @@ function AddUsuarios() {
           className="p-2 border rounded"
         />
 
-        {/* Fijo en trabajador, pero igual lo dejamos en select */}
         <select
           name="rol"
           value={formData.rol}
@@ -133,16 +125,43 @@ function AddUsuarios() {
         </button>
       </form>
 
-      {/* DataTable */}
-      <h3 className="text-lg font-semibold mb-2">Lista de Trabajadores</h3>
-      <DataTable
-        columns={columnas}
-        data={usuarios}
-        pagination
-        highlightOnHover
-        striped
-        noDataComponent="⚠️ No hay trabajadores registrados"
-      />
+      {/* Mostrar QR si existe */}
+      {qrCode && (
+        <div className="mt-6 text-center">
+          <h3 className="font-bold">Código QR del Usuario</h3>
+          <img src={qrCode} alt="QR Code" className="mx-auto my-4" />
+          <a
+            href={qrCode}
+            download="usuario_qr.png"
+            className="bg-green-600 text-white px-4 py-2 rounded"
+          >
+            Descargar QR
+          </a>
+        </div>
+      )}
+
+      {/* Tabla de usuarios */}
+      <h3 className="text-lg font-bold mt-8 mb-4">Lista de Usuarios</h3>
+      <table className="w-full border">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="p-2 border">ID</th>
+            <th className="p-2 border">Nombre</th>
+            <th className="p-2 border">Email</th>
+            <th className="p-2 border">Rol</th>
+          </tr>
+        </thead>
+        <tbody>
+          {usuarios.map((u) => (
+            <tr key={u.id}>
+              <td className="p-2 border">{u.id}</td>
+              <td className="p-2 border">{u.nombre}</td>
+              <td className="p-2 border">{u.email}</td>
+              <td className="p-2 border">{u.rol}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

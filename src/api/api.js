@@ -1,9 +1,15 @@
 // src/api/api.js
 const API_URL = import.meta.env.VITE_APP_URL || "http://localhost:4000";
 
-// Helper para manejar errores de respuesta
+// Helper para manejar respuestas y errores
 async function handleResponse(res) {
-  const data = await res.json();
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error("Respuesta no válida del servidor");
+  }
+
   if (!res.ok) {
     throw new Error(data.message || "Error en la petición");
   }
@@ -31,23 +37,29 @@ export async function registerUser(userData) {
   });
   return handleResponse(res);
 }
-// Listar datos
+
 // Obtener todos los usuarios
 export async function getUsers() {
   const res = await fetch(`${API_URL}/api/auth/users`);
   return handleResponse(res);
 }
 
-
-
-
-
-
-
 // Verificar token
 export async function verifyToken(token) {
   const res = await fetch(`${API_URL}/api/auth/verify`, {
     headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse(res);
+}
+
+// ------------------ ASISTENCIA ------------------
+
+// Marcar asistencia con QR
+export async function marcarAsistencia(qrCode) {
+  const res = await fetch(`${API_URL}/api/asistencia/marcar`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ codigo_qr: qrCode }),
   });
   return handleResponse(res);
 }

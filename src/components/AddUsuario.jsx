@@ -1,41 +1,107 @@
-import pool from "../db/db.js";   // conexión a PostgreSQL
-import bcrypt from "bcryptjs";
+import React, { useState } from "react";
 
-// Controlador para registrar un nuevo usuario
-export const addUsuario = async (req, res) => {
-  try {
-    const { nombre, email, password, rol } = req.body;
+function AddUsuarios() {
+  const [formData, setFormData] = useState({
+    nombre: "",
+    email: "",
+    password: "",
+    rol: "trabajador", // valor por defecto
+  });
+  const [mensaje, setMensaje] = useState("");
 
-    // Validar datos
-    if (!nombre || !email || !password || !rol) {
-      return res.status(400).json({ error: "Faltan datos" });
-    }
+  // URL desde variables de entorno
+  const API_URL = import.meta.env.VITE_API_URL;
 
-    // Verificar si ya existe el email
-    const existe = await pool.query("SELECT * FROM usuarios WHERE email = $1", [email]);
-    if (existe.rows.length > 0) {
-      return res.status(400).json({ error: "El email ya está registrado" });
-    }
-
-    // Encriptar contraseña
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Insertar en la tabla usuarios
-    const nuevoUsuario = await pool.query(
-      `INSERT INTO usuarios (nombre, email, password, rol) 
-       VALUES ($1, $2, $3, $4) RETURNING id, nombre, email, rol, created_at`,
-      [nombre, email, hashedPassword, rol]
-    );
-
-    // Respuesta
-    res.status(201).json({
-      mensaje: "Usuario registrado correctamente",
-      usuario: nuevoUsuario.rows[0]
+  // Manejar cambios en los inputs
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
     });
+  };
 
-  } catch (error) {
-    console.error("Error en addUsuario:", error.message);
-    res.status(500).json({ error: "Error del servidor" });
-  }
-};
+  // Enviar formulario
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMensaje("");
+
+    try {
+      const res = await fetch(`${API_URL}/api/usuarios`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setMensaje("✅ Usuario registrado correctamente");
+        setFormData({ nombre: "", email: "", password: "", rol: "trabajador" });
+      } else {
+        setMensaje(`❌ Error: ${data.error}`);
+      }
+    } catch (error) {
+      console.error("Error al registrar:", error);
+      setMensaje("⚠️ Error en la conexión con el servidor");
+    }
+  };
+
+  return (
+    <div className="p-6 max-w-md mx-auto bg-white rounded-xl shadow-lg">
+      <h2 className="text-xl font-bold mb-4">Registrar Usuario</h2>
+
+      {mensaje && <p className="mb-4 text-sm">{mensaje}</p>}
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <input
+          type="text"
+          name="nombre"
+          placeholder="Nombre completo"
+          value={formData.nombre}
+          onChange={handleChange}
+          required
+          className="p-2 border rounded"
+        />
+
+        <input
+          type="email"
+          name="email"
+          placeholder="Correo electrónico"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          className="p-2 border rounded"
+        />
+
+        <input
+          type="password"
+          name="password"
+          placeholder="Contraseña"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          className="p-2 border rounded"
+        />
+
+        <select
+          name="rol"
+          value={formData.rol}
+          onChange={handleChange}
+          className="p-2 border rounded"
+        >
+          <option value="trabajador">Trabajador</option>
+          <option value="admin">Administrador</option>
+        </select>
+
+        <button
+          type="submit"
+          className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+        >
+          Registrar
+        </button>
+      </form>
+    </div>
+  );
+}
+
+export default AddUsuarios;

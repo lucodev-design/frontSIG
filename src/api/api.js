@@ -1,5 +1,6 @@
 // src/api/api.js
-const API_URL = import.meta.env.VITE_APP_URL || "http://localhost:4000";
+const API_URL = import.meta.env.VITE_APP_URL ;
+// const API_URL = import.meta.env.VITE_APP_URL || "http://localhost:4000"; solo si se trabajara en local
 
 // Helper para manejar respuestas y errores
 async function handleResponse(res) {

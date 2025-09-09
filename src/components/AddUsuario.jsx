@@ -1,18 +1,17 @@
 import React, { useState } from "react";
+import { registerUser } from "../api/api"; // Importamos la función del helper
 
 function AddUsuarios() {
   const [formData, setFormData] = useState({
     nombre: "",
     email: "",
     password: "",
-    rol: "trabajador", // valor por defecto
+    rol: "trabajador", // por defecto trabajador
   });
+
   const [mensaje, setMensaje] = useState("");
 
-  // URL desde variables de entorno
-  const API_URL = import.meta.env.VITE_API_URL;
-
-  // Manejar cambios en los inputs
+  // Manejo de inputs
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -20,29 +19,25 @@ function AddUsuarios() {
     });
   };
 
-  // Enviar formulario
+  // Envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMensaje("");
 
     try {
-      const res = await fetch(`${API_URL}/api/usuarios`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+      await registerUser(formData); // Usamos la función centralizada
+      setMensaje("✅ Usuario registrado correctamente");
+
+      // limpiar formulario
+      setFormData({
+        nombre: "",
+        email: "",
+        password: "",
+        rol: "trabajador",
       });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setMensaje("✅ Usuario registrado correctamente");
-        setFormData({ nombre: "", email: "", password: "", rol: "trabajador" });
-      } else {
-        setMensaje(`❌ Error: ${data.error}`);
-      }
     } catch (error) {
-      console.error("Error al registrar:", error);
-      setMensaje("⚠️ Error en la conexión con el servidor");
+      console.error("Error al registrar usuario:", error);
+      setMensaje(`❌ ${error.message}`);
     }
   };
 
@@ -50,7 +45,15 @@ function AddUsuarios() {
     <div className="p-6 max-w-md mx-auto bg-white rounded-xl shadow-lg">
       <h2 className="text-xl font-bold mb-4">Registrar Usuario</h2>
 
-      {mensaje && <p className="mb-4 text-sm">{mensaje}</p>}
+      {mensaje && (
+        <p
+          className={`mb-4 text-sm ${
+            mensaje.startsWith("✅") ? "text-green-600" : "text-red-600"
+          }`}
+        >
+          {mensaje}
+        </p>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input

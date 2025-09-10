@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { registerUser, getUsers } from "../api/api";
+import { registerUser, getUsers, deleteUser } from "../api/api";
 
 function AddUsuarios() {
   const [formData, setFormData] = useState({
@@ -13,9 +13,7 @@ function AddUsuarios() {
   const [usuarios, setUsuarios] = useState([]);
   const [qrCode, setQrCode] = useState("");
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,15 +23,12 @@ function AddUsuarios() {
     try {
       const res = await registerUser(formData);
       setMensaje("✅ Usuario registrado correctamente");
-
       if (res.qrImage) setQrCode(res.qrImage);
-
       setFormData({ nombre: "", email: "", password: "", rol: "trabajador" });
-
       fetchUsers();
     } catch (error) {
-      console.error("❌ Error al registrar usuario:", error);
       setMensaje(`❌ ${error.message}`);
+      console.error(error);
     }
   };
 
@@ -43,6 +38,18 @@ function AddUsuarios() {
       setUsuarios(data);
     } catch (error) {
       console.error("❌ Error al listar usuarios:", error);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("¿Estás seguro de eliminar este usuario?")) return;
+
+    try {
+      const data = await deleteUser(id);
+      alert(data.message);
+      fetchUsers();
+    } catch (error) {
+      alert(`❌ ${error.message}`);
     }
   };
 
@@ -61,52 +68,16 @@ function AddUsuarios() {
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <input
-          type="text"
-          name="nombre"
-          placeholder="Nombre completo"
-          value={formData.nombre}
-          onChange={handleChange}
-          required
-          className="p-2 border rounded"
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Correo electrónico"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          className="p-2 border rounded"
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Contraseña"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          className="p-2 border rounded"
-        />
-        <select
-          name="rol"
-          value={formData.rol}
-          onChange={handleChange}
-          className="p-2 border rounded"
-        >
+        <input type="text" name="nombre" placeholder="Nombre completo" value={formData.nombre} onChange={handleChange} required className="p-2 border rounded" />
+        <input type="email" name="email" placeholder="Correo electrónico" value={formData.email} onChange={handleChange} required className="p-2 border rounded" />
+        <input type="password" name="password" placeholder="Contraseña" value={formData.password} onChange={handleChange} required className="p-2 border rounded" />
+        <select name="rol" value={formData.rol} onChange={handleChange} className="p-2 border rounded">
           <option value="trabajador">Trabajador</option>
           <option value="admin">Administrador</option>
         </select>
-
-        <button
-          type="submit"
-          className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-        >
-          Registrar
-        </button>
+        <button type="submit" className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Registrar</button>
       </form>
 
-      {/* Mostrar QR */}
       {qrCode && (
         <div className="mt-6 text-center">
           <h3 className="font-bold">Código QR del Usuario</h3>
@@ -117,7 +88,6 @@ function AddUsuarios() {
         </div>
       )}
 
-      {/* Tabla de usuarios */}
       <h3 className="text-lg font-bold mt-8 mb-4">Lista de Usuarios</h3>
       <table className="w-full border">
         <thead>
@@ -127,6 +97,7 @@ function AddUsuarios() {
             <th className="p-2 border">Email</th>
             <th className="p-2 border">Rol</th>
             <th className="p-2 border">QR</th>
+            <th className="p-2 border">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -137,12 +108,12 @@ function AddUsuarios() {
               <td className="p-2 border">{u.email}</td>
               <td className="p-2 border">{u.rol}</td>
               <td className="p-2 border text-center">
-                <button
-                  onClick={() => setQrCode(u.codigo_qr)}
-                  className="bg-gray-600 text-white px-2 py-1 rounded text-sm"
-                >
-                  Ver QR
-                </button>
+                <button onClick={() => setQrCode(u.qrImage)} className="bg-gray-600 text-white px-2 py-1 rounded text-sm">Ver QR</button>
+              </td>
+              <td className="p-2 border text-center">
+                {u.rol !== "admin" && (
+                  <button onClick={() => handleDelete(u.id)} className="bg-red-600 text-white px-2 py-1 rounded text-sm">Eliminar</button>
+                )}
               </td>
             </tr>
           ))}

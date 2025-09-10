@@ -10,7 +10,7 @@ const Asistencia = () => {
   const [mensaje, setMensaje] = useState("");
   const [usuario, setUsuario] = useState(null);
   const [codigoQR, setCodigoQR] = useState("");
-  const [ultimoQR, setUltimoQR] = useState(""); // 👈 para evitar registros duplicados
+  const [ultimoQR, setUltimoQR] = useState("");
 
   useEffect(() => {
     if (videoRef.current && !scannerRef.current) {
@@ -18,10 +18,10 @@ const Asistencia = () => {
         videoRef.current,
         async (result) => {
           if (result && result.data && result.data !== ultimoQR) {
-            setUltimoQR(result.data); // Guardamos el último QR leído
+            setUltimoQR(result.data);
             setCodigoQR(result.data);
 
-            // Geolocalización y envío de asistencia
+            // Obtener geolocalización
             navigator.geolocation.getCurrentPosition(
               async (pos) => {
                 const ubicacion = `${pos.coords.latitude},${pos.coords.longitude}`;
@@ -39,6 +39,11 @@ const Asistencia = () => {
                   } else {
                     setMensaje(info.mensaje);
                     setUsuario(info.usuario || null);
+
+                    // 🔹 Recargar página después de 5 segundos
+                    setTimeout(() => {
+                      window.location.reload();
+                    }, 5000);
                   }
                 } catch (error) {
                   console.error("❌ Error al registrar asistencia:", error);
@@ -48,7 +53,8 @@ const Asistencia = () => {
               (err) => {
                 console.error("❌ Error de geolocalización:", err.message);
                 setMensaje("❌ No se pudo obtener ubicación");
-              }
+              },
+              { enableHighAccuracy: true }
             );
           }
         },
@@ -58,6 +64,7 @@ const Asistencia = () => {
           maxScansPerSecond: 1,
         }
       );
+
       scannerRef.current.start();
     }
 
@@ -76,7 +83,7 @@ const Asistencia = () => {
       <div className="card shadow-lg">
         <div className="card-body text-center">
           {/* Video cámara */}
-          <video ref={videoRef} style={{ width: "100%" }} muted></video>
+          <video ref={videoRef} style={{ width: "100%" }} muted />
 
           {/* Mensaje */}
           {mensaje && (

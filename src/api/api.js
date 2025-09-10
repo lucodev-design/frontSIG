@@ -39,19 +39,21 @@ export async function getUsers() {
 // Eliminar usuario (requiere token de admin)
 export async function deleteUser(id) {
   try {
-    const token = localStorage.getItem("token"); // Token guardado al login
+    const token = localStorage.getItem("token"); // asumiendo que guardaste el token al login
     const res = await fetch(`${API_URL}/api/auth/user/${id}`, {
       method: "DELETE",
-      headers: {
+      headers: { 
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        "Authorization": `Bearer ${token}` // enviamos token
       },
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Error al eliminar usuario");
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "Error al eliminar usuario");
+    }
 
-    return data;
+    return res.json();
   } catch (error) {
     console.error("❌ Error en deleteUser:", error);
     throw error;

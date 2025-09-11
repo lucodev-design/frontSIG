@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { registerUser, getUsers, deleteUser } from "../api/api";
+import "../templates/styles/addUser.css";
 
 function AddUsuarios() {
   const [formData, setFormData] = useState({
@@ -58,31 +59,79 @@ function AddUsuarios() {
   }, []);
 
   return (
-    <div className="p-6 max-w-3xl mx-auto bg-white rounded-xl shadow-lg">
-      <h2 className="text-xl font-bold mb-4">Registrar Usuario</h2>
+    <div
+      className="p-6 max-w-3xl mx-auto bg-white rounded-xl shadow-lg"
+      id="container-content"
+    >
+      <h2 id="title" className="text-xl font-bold mb-4">Registrar Usuario</h2>
 
       {mensaje && (
-        <p className={`mb-4 text-sm ${mensaje.startsWith("✅") ? "text-green-600" : "text-red-600"}`}>
+        <p
+          className={`mb-4 text-sm ${
+            mensaje.startsWith("✅") ? "text-green-600" : "text-red-600"
+          }`}
+        >
           {mensaje}
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <input type="text" name="nombre" placeholder="Nombre completo" value={formData.nombre} onChange={handleChange} required className="p-2 border rounded" />
-        <input type="email" name="email" placeholder="Correo electrónico" value={formData.email} onChange={handleChange} required className="p-2 border rounded" />
-        <input type="password" name="password" placeholder="Contraseña" value={formData.password} onChange={handleChange} required className="p-2 border rounded" />
-        <select name="rol" value={formData.rol} onChange={handleChange} className="p-2 border rounded">
+      <form onSubmit={handleSubmit} className="form-container">
+        <h2 className="form-title">Registro de Usuario</h2>
+
+        <input
+          type="text"
+          name="nombre"
+          placeholder="Nombre completo"
+          value={formData.nombre}
+          onChange={handleChange}
+          required
+          className="form-input"
+        />
+
+        <input
+          type="email"
+          name="email"
+          placeholder="Correo electrónico"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          className="form-input"
+        />
+
+        <input
+          type="password"
+          name="password"
+          placeholder="Contraseña"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          className="form-input"
+        />
+
+        <select
+          name="rol"
+          value={formData.rol}
+          onChange={handleChange}
+          className="form-select"
+        >
           <option value="trabajador">Trabajador</option>
           <option value="admin">Administrador</option>
         </select>
-        <button type="submit" className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Registrar</button>
+
+        <button type="submit" className="form-button">
+          Registrar
+        </button>
       </form>
 
       {qrCode && (
         <div className="mt-6 text-center">
           <h3 className="font-bold">Código QR del Usuario</h3>
           <img src={qrCode} alt="QR Code" className="mx-auto my-4" />
-          <a href={qrCode} download="usuario_qr.png" className="bg-green-600 text-white px-4 py-2 rounded">
+          <a
+            href={qrCode}
+            download="usuario_qr.png"
+            className="bg-green-600 text-white px-4 py-2 rounded"
+          >
             Descargar QR
           </a>
         </div>
@@ -108,17 +157,35 @@ function AddUsuarios() {
               <td className="p-2 border">{u.email}</td>
               <td className="p-2 border">{u.rol}</td>
               <td className="p-2 border text-center">
-                <button onClick={() => setQrCode(u.qrImage)} className="bg-gray-600 text-white px-2 py-1 rounded text-sm">Ver QR</button>
+                <button
+                  onClick={() => setQrCode(u.qrImage)}
+                  className="btn-op bg-gray-600 text-white px-2 py-1 rounded text-sm"
+                >
+                  Ver QR
+                </button>
               </td>
               <td className="p-2 border text-center">
                 {u.rol !== "admin" && (
-                  <button onClick={() => handleDelete(u.id)} className="bg-red-600 text-white px-2 py-1 rounded text-sm">Eliminar</button>
+                  <button
+                    onClick={() => handleDelete(u.id)}
+                    className="btn-op bg-red-600 text-white px-2 py-1 rounded text-sm"
+                  >
+                    Eliminar
+                  </button>
                 )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      {/* boton para volver al dashboard */}
+      <button
+        onClick={() => (window.location.href = "/dashboardAdmin")}
+        className="btn btn-primary "
+        id="btn-after"
+      >
+        Volver
+      </button>
     </div>
   );
 }

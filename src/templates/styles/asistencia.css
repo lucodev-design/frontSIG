@@ -1,0 +1,6 @@
+
+#card-camera{    
+    display: grid;    
+    place-content: center;
+    max-width: 100%;
+}

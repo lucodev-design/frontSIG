@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import QrScanner from "qr-scanner";
+import "../templates/styles/asistencia.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -77,13 +78,13 @@ const Asistencia = () => {
   }, [ultimoQR]);
 
   return (
-    <div className="container mt-5">
+    <div className="container mt-5" id="card-camera">
       <h2 className="text-center mb-4">📌 Registro de Asistencia</h2>
 
-      <div className="card shadow-lg">
+      <div className="card shadow-lg" >
         <div className="card-body text-center">
           {/* Video cámara */}
-          <video ref={videoRef} style={{ width: "100%" }} muted />
+          <video ref={videoRef}muted id="card-camera" />
 
           {/* Mensaje */}
           {mensaje && (

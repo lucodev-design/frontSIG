@@ -1,16 +1,23 @@
 /* Formulario */
-#title{
-    margin: 10px;
-    font-weight: 700;
+#title {
+  margin: 10px;
+  font-weight: 700;
 }
+
 /* 🎨 Nueva paleta viva */
 :root {
-  --color-bg: #f5f7fa;        /* Fondo claro */
-  --color-card: #ffffff;      /* Tarjeta blanca */
-  --color-text: #333333;      /* Texto oscuro */
-  --color-primary: #2563eb;   /* Azul vibrante */
-  --color-secondary: #10b981; /* Verde brillante */
-  --color-border: #e5e7eb;    /* Bordes suaves */
+  --color-bg: #f5f7fa;
+  /* Fondo claro */
+  --color-card: #ffffff;
+  /* Tarjeta blanca */
+  --color-text: #333333;
+  /* Texto oscuro */
+  --color-primary: #2563eb;
+  /* Azul vibrante */
+  --color-secondary: #10b981;
+  /* Verde brillante */
+  --color-border: #e5e7eb;
+  /* Bordes suaves */
 }
 
 .form-container {
@@ -72,22 +79,114 @@
   background: var(--color-secondary);
   transform: translateY(-2px);
 }
+
 /* botones */
-.btn-op{
-    border: 1px solid #10b981;
-    background-color: #10b981;
-}
-.btn-op:hover{
-    background-color: #007e54;
-}
-/* Contenido de la tabla */
-#container-content{
-    display: grid;
-    place-content: center;
-    place-items: center;
-}
-#btn-after{    
-    width: 150px;    
-    margin: 10px;
+.btn-op {
+  border: 1px solid #10b981;
+  background-color: #10b981;
 }
 
+.btn-op:hover {
+  background-color: #007e54;
+}
+
+/* Contenido de la tabla */
+#container-content {
+  display: grid;
+  place-content: center;
+  place-items: center;
+}
+
+/* Contenedor principal */
+.table-contain {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Tabla general */
+.table-containn {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.table-containn th,
+.table-containn td {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.table-containn thead {
+  background: #f3f4f6;
+}
+
+.table-containn th {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+/* Botones */
+.btn-op {
+  transition: all 0.2s ease;
+}
+
+.btn-op:hover {
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .table-containn thead {
+    display: none;
+    /* ocultamos cabecera en móvil */
+  }
+
+  .table-containn tr {
+    display: block;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 0.5rem;
+    background: #fff;
+  }
+
+  .table-containn td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: none;
+    border-bottom: 1px solid #eee;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .table-containn td:last-child {
+    border-bottom: none;
+  }
+
+  .table-containn td::before {
+    content: attr(data-label);
+    /* usamos data-label en JSX */
+    font-weight: bold;
+    text-transform: capitalize;
+    margin-right: 0.5rem;
+    color: #555;
+  }
+}
+
+/* Ocultar columnas extra en móvil */
+@media (max-width: 768px) {
+  .more {
+    display: none;
+  }
+}
+
+#btn-after {
+  width: 150px;
+  margin: 10px;
+}

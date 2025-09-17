@@ -1,5 +1,5 @@
 #root {  
-  background-image: url("src/templates/img/imn-empress.png");
+  background-image: url("../public/img/imn-empress.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;

@@ -21,7 +21,7 @@ const DashboardAdmin = () => {
       <Row className="mb-4">
         <Col>
           <h2 className="text-primary">Panel de Administrador</h2>
-          <p className="text-muted">Bienvenido, aquí puedes gestionar el sistema.</p>
+          <p className="text-muted">Bienvenido</p>
         </Col>
       </Row>
 

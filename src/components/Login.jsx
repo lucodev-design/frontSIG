@@ -48,7 +48,7 @@ export default function Login() {
       <div className="card shadow p-4" style={{ width: "100%", maxWidth: "400px" }}>
         <h2 className="text-center text-primary mb-4">Sistema de Asistencia</h2>
         <div className="d-flex justify-content-center ">   
-          <img className="img-user-login" src="/public/Sample_User_Icon.png" alt="" />
+          <img className="img-user-login" src="/Sample_User_Icon.png" alt="" />
         </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-3">

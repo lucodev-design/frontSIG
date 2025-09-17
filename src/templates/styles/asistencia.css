@@ -1,6 +1,20 @@
+.containeer-content {
+    max-width: 75%;
+    max-height: 70%;
+    background-color: rgb(225, 255, 255, 0.7);    
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
 
-#card-camera{    
-    display: grid;    
-    place-content: center;
-    max-width: 100%;
+#card-camera {
+    display: grid;
+    place-content: center;    
+}
+video{
+    width: 100%;
 }

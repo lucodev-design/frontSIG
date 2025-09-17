@@ -81,7 +81,7 @@ const Asistencia = () => {
     <div className="container mt-5 containeer-content" id="card-camera">
       <h2 className="text-center mb-4">📌 Registro de Asistencia</h2>
 
-      <div className="card shadow-lg" >
+      <div className="card" >
         <div className="card-body text-center">
           {/* Video cámara */}
           <video ref={videoRef}muted id="card-camera" />

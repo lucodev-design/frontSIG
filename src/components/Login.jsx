@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../api/api"; // 👈 importamos nuestra API
+import { loginUser } from "../api/api"; // importamos nuestra API
+import "../templates/styles/login.css"
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -45,7 +46,10 @@ export default function Login() {
   return (
     <div className="d-flex align-items-center justify-content-center vh-100 bg-light">
       <div className="card shadow p-4" style={{ width: "100%", maxWidth: "400px" }}>
-        <h2 className="text-center text-primary mb-4">Sistema de Gestión Empresarial</h2>
+        <h2 className="text-center text-primary mb-4">Sistema de Asistencia</h2>
+        <div className="d-flex justify-content-center ">   
+          <img className="img-user-login" src="src/templates/img/Sample_User_Icon.png" alt="" />
+        </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label className="form-label">Correo</label>

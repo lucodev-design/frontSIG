@@ -44,11 +44,11 @@ export default function Login() {
   };
 
   return (
-    <div className="d-flex align-items-center justify-content-center vh-100 bg-light">
+    <div className="d-flex align-items-center justify-content-center vh-100  principal-content">
       <div className="card shadow p-4" style={{ width: "100%", maxWidth: "400px" }}>
         <h2 className="text-center text-primary mb-4">Sistema de Asistencia</h2>
         <div className="d-flex justify-content-center ">   
-          <img className="img-user-login" src="../public/img/Sample-User_Icon.png" alt="" />
+          <img className="img-user-login" src="/public/Sample_User_Icon.png" alt="" />
         </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-3">

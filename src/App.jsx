@@ -1,51 +1,84 @@
 // src/App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
+// Componentes y páginas
 import Login from "./components/Login";
-import DashboardUser from "./pages/dashboardUser";
-import DashboardAdmin from "./pages/dashboardAdmin";
+import DashboardUser from "./pages/DashboardUser";
+import DashboardAdmin from "./pages/DashboardAdmin";
 import PrivateRoute from "./components/PrivateRoute";
-import Asistencia from "./pages/Asistencia";   // página de asistencia con QR
-import AddUsuario from "./components/AddUsuario";   // 👈 nuevo componente para registrar usuarios
+import Asistencia from "./pages/Asistencia";   
+// import AddUsuario from "./components/AddUsuario";   
+
 import "./App.css";
+import AggUsuario from "./pruebasHooks/AggUsuario";
+// importaciones para trabajadr dentro de admin
+import GestionUsuario from "./pages/AdminPages/GestionUsuario";
+import ListUser from "./pages/AdminPages/ListUser";
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* 👇 Ahora la raíz "/" será la página de asistencia */}
+        {/* Página de asistencia como raíz */}
         <Route path="/" element={<Asistencia />} />
 
-        {/* 👇 Login se moverá a /login */}
+        {/* Login */}
         <Route path="/login" element={<Login />} />
 
-        {/* 👇 Dashboards protegidos */}
+
+
+        {/* Codigo para el formulario  temporal de registros */}
+        <Route path="/agregar-usuario-test" element={<AggUsuario/>} />
+        {/* Gestion de Administrador */}
+        {/* <Route path="/GestionUser" element={<GestionUsuario/>} /> */}
+        {/* <Route path="/ListaUsuarios" element={<ListUser/>} /> */}
+
+
+
+
+
+        {/* Dashboard ADMIN */}
         <Route
           path="/dashboardAdmin"
           element={
-            <PrivateRoute>
+            <PrivateRoute roleRequired={1}>
               <DashboardAdmin />
             </PrivateRoute>
           }
         />
+
+        {/* Dashboard USER */}
         <Route
           path="/dashboardUser"
           element={
-            <PrivateRoute>
+            <PrivateRoute roleRequired={2}>
               <DashboardUser />
             </PrivateRoute>
           }
         />
 
-        {/* 👇 Ruta para registrar nuevo usuario */}
+        {/* Registrar usuario (solo Admin) */}
         <Route
-          path="/add-usuario"
+          path="/add-user"
           element={
-            <PrivateRoute>
-              <AddUsuario />
+            <PrivateRoute roleRequired={1}>
+              <GestionUsuario />
             </PrivateRoute>
           }
         />
+        {/* Listar usuarios */}
+        <Route
+          path="ListaUsuarios"
+          element={
+            <PrivateRoute roleRequired={1}>
+              <ListUser />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Ruta fallback */}
+        <Route path="*" element={<h2 className="text-center mt-10">404 - Página no encontrada</h2>} />
       </Routes>
     </Router>
   );

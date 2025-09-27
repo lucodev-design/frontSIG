@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../api/api"; // importamos nuestra API
-import { Eye, EyeOff } from "lucide-react"; // importamos iconos
+import { loginUser } from "../api/api"; 
+import { Eye, EyeOff } from "lucide-react";
 import "../templates/styles/login.css";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // estado para ver/ocultar
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -19,27 +19,33 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const data = await loginUser(form); //aquí usamos api.js
+      // Llamada correcta al loginUser
+      const data = await loginUser(form.email, form.password);
 
-      // Guardar token y user
+      if (!data.success) {
+        alert(data.message || "Credenciales inválidas ❌");
+        return;
+      }
+
+      // Guardar token y user en localStorage
       localStorage.setItem("token", data.token);
-      if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
 
-      // Redirección según rol
-      const rol =
-        (data.rol || data.role || data.user?.rol || data.user?.role || "").toLowerCase();
+      // Redirección según rol_id
+      const rol_id = data.user?.rol_id;
 
-      const email = (data.user?.email || form.email || "").toLowerCase();
-
-      if (rol === "trabajador" || rol === "empleado") {
-        navigate("/dashboardUser");
-      } else if (rol === "admin" || email === "admin@empresa.com") {
+      if (rol_id === 1) {
         navigate("/dashboardAdmin");
-      } else {
+      } else if (rol_id === 2) {
         navigate("/dashboardUser");
+      } else {
+        navigate("/dashboardUser"); // fallback
       }
     } catch (err) {
-      alert(err.message || "Error en el login ❌");
+      console.error("Error en login:", err);
+      alert("Error en el login ❌");
     } finally {
       setLoading(false);
     }
@@ -54,6 +60,7 @@ export default function Login() {
       >
         Volver
       </button>
+
       <div
         className="card shadow p-4"
         style={{ width: "100%", maxWidth: "400px" }}
@@ -62,6 +69,7 @@ export default function Login() {
         <div className="d-flex justify-content-center">
           <img className="img-user-login" src="/Sample_User_Icon.png" alt="" />
         </div>
+
         <form onSubmit={handleSubmit}>
           <div className="wrapper">
             <div className="mb-3">
@@ -87,6 +95,7 @@ export default function Login() {
                 name="password"
                 value={form.password}
                 onChange={handleChange}
+                className="form-control"
                 required
                 autoComplete="current-password"
               />
@@ -102,7 +111,7 @@ export default function Login() {
 
           <button
             type="submit"
-            className="btn btn-primary  btn-pass"
+            className="btn btn-primary w-100 btn-pass"
             disabled={loading}
           >
             {loading ? "Ingresando..." : "Iniciar Sesión"}

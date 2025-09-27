@@ -71,3 +71,10 @@ img{
 .btn-volver:hover {
   background-color: #0e47b7; /* un tono más oscuro al pasar el mouse */
 }
+/* Estilos apra el boton de ir a ver la lista de usuarios */
+.btn-List{
+  margin: 5px;
+}
+.btn-List:hover{
+  background-color: #740000;
+}

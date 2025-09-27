@@ -1,0 +1,7 @@
+Archivos para eliminar por desuso o abandono
+    - AddUsuarios.jsx --> en su lugar se usa GestionUsuario.jsx
+    - 
+
+Archivos en uso para el administrador:
+    - DashboardAdmin
+    - Gestionusurio

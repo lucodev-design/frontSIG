@@ -1,82 +1,77 @@
-// src/api/api.js
+import axios from "axios";
 
-// URL del backend
-export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+// api.js
+export const API_URL = import.meta.env.VITE_API_URL?.trim() || "http://localhost:4000";
 
-// Registrar usuario
-export async function registerUser(userData) {
+// ====== ROLES ======
+// Crear Rol
+export const createRol = async (data) => {
+  const res = await axios.post(`${API_URL}/api/auth/roles`, data);
+  return res.data;
+};
+
+// Obtener Roles
+export const getRoles = async () => {
+  const res = await axios.get(`${API_URL}/api/auth/roles`);
+  return res.data;
+};
+
+// ====== SEDES ======
+// Crear Sede
+export const createSede = async (data) => {
+  const res = await axios.post(`${API_URL}/api/auth/sedes`, data);
+  return res.data;
+};
+
+// Obtener Sedes
+export const getSedes = async () => {
+  const res = await axios.get(`${API_URL}/api/auth/sedes`);
+  return res.data;
+};
+
+// ====== USUARIOS ======
+// Registrar Usuario
+export const registerUser = async (data) => {
+  const res = await axios.post(`${API_URL}/api/auth/register`, data);
+  return res.data;
+};
+
+// Obtener Usuarios
+export const getUsers = async () => {
+  const res = await axios.get(`${API_URL}/api/auth/users`);
+  return res.data;
+};
+
+// Eliminar Usuario
+export const deleteUser = async (id_usuario) => {
   try {
-    const res = await fetch(`${API_URL}/api/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userData),
-    });
+    const res = await axios.delete(`${API_URL}/api/auth/users/${id_usuario}`);
+    return res.data;
+  } catch (err) {
+    console.error("❌ Error en deleteUser:", err.response?.data || err.message);
+    throw err;
+  }
+};
 
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || "Error al registrar usuario");
+
+// Actualizar Usuario
+export const updateUser = async (id_usuario, data) => {
+  const res = await axios.put(`${API_URL}/api/auth/users/${id_usuario}`, data);
+  return res.data;
+};
+
+// ---------------- LOGIN ----------------
+export const loginUser = async (email, password) => {
+  try {
+    const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
+    return res.data;
+  } catch (err) {
+    console.error("Error en loginUser:", err.response?.data || err.message);
+
+    if (err.response && err.response.data) {
+      return err.response.data;
     }
 
-    return res.json();
-  } catch (error) {
-    console.error("❌ Error en registerUser:", error);
-    throw error;
+    return { success: false, message: "Error al conectar con el servidor" };
   }
-}
-
-// Listar usuarios
-export async function getUsers() {
-  try {
-    const res = await fetch(`${API_URL}/api/auth/users`);
-    if (!res.ok) throw new Error("Error al obtener usuarios");
-    return res.json();
-  } catch (error) {
-    console.error("❌ Error en getUsers:", error);
-    throw error;
-  }
-}
-
-// Eliminar usuario (requiere token de admin)
-export async function deleteUser(id) {
-  try {
-    const token = localStorage.getItem("token"); // asumiendo que guardaste el token al login
-    const res = await fetch(`${API_URL}/api/auth/user/${id}`, {
-      method: "DELETE",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}` // enviamos token
-      },
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || "Error al eliminar usuario");
-    }
-
-    return res.json();
-  } catch (error) {
-    console.error("❌ Error en deleteUser:", error);
-    throw error;
-  }
-}
-
-// Login
-export async function loginUser(credentials) {
-  try {
-    const res = await fetch(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(credentials),
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || "Error al iniciar sesión");
-    }
-
-    return res.json();
-  } catch (error) {
-    console.error("❌ Error en loginUser:", error);
-    throw error;
-  }
-}
+};

@@ -4,8 +4,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 // Componentes y páginas
 import Login from "./components/Login";
-import DashboardUser from "./pages/DashboardUser";
-import DashboardAdmin from "./pages/DashboardAdmin";
+import DashboardUser from "./pages/dashboardUser";
+import DashboardAdmin from "./pages/dashboardAdmin";
 import PrivateRoute from "./components/PrivateRoute";
 import Asistencia from "./pages/Asistencia";   
 // import AddUsuario from "./components/AddUsuario";   

@@ -75,3 +75,30 @@ export const loginUser = async (email, password) => {
     return { success: false, message: "Error al conectar con el servidor" };
   }
 };
+
+// ====== ASISTENCIAS ======
+
+// Marcar asistencia (entrada/salida)
+export const marcarAsistencia = async (qr, ubicacion) => {
+  try {
+    const res = await axios.post(`${API_URL}/api/auth/asistencia/marcar`, {
+      qr,
+      ubicacion,
+    });
+    return res.data;
+  } catch (err) {
+    console.error("❌ Error en marcarAsistencia:", err.response?.data || err.message);
+    throw err;
+  }
+};
+
+// Obtener asistencias (opcional, para admin/reporte)
+export const getAsistencias = async () => {
+  try {
+    const res = await axios.get(`${API_URL}/api/auth/asistencias`);
+    return res.data;
+  } catch (err) {
+    console.error("❌ Error en getAsistencias:", err.response?.data || err.message);
+    throw err;
+  }
+};

@@ -1,3 +1,4 @@
+// src/pages/Asistencias.jsx
 import React, { useEffect, useRef, useState } from "react";
 import QrScanner from "qr-scanner";
 import "../templates/styles/asistencia.css";
@@ -22,7 +23,7 @@ const Asistencia = () => {
             setUltimoQR(result.data);
             setCodigoQR(result.data);
 
-            // Obtener geolocalización
+            // 🔹 Obtener geolocalización
             navigator.geolocation.getCurrentPosition(
               async (pos) => {
                 const ubicacion = `${pos.coords.latitude},${pos.coords.longitude}`;
@@ -38,14 +39,17 @@ const Asistencia = () => {
                   if (!res.ok) {
                     setMensaje(info.mensaje || "❌ Error en el servidor");
                   } else {
-                    setMensaje(info.mensaje);
+                    setMensaje(info.mensaje); // ✅ Entrada o salida
                     setUsuario(info.usuario || null);
-
-                    // 🔹 Recargar página después de 5 segundos
-                    setTimeout(() => {
-                      window.location.reload();
-                    }, 5000);
                   }
+
+                  // 🔄 Reiniciar después de 5 segundos
+                  setTimeout(() => {
+                    setMensaje("");
+                    setUsuario(null);
+                    setCodigoQR("");
+                    setUltimoQR("");
+                  }, 5000);
                 } catch (error) {
                   console.error("❌ Error al registrar asistencia:", error);
                   setMensaje("❌ Error al registrar asistencia");
@@ -81,10 +85,10 @@ const Asistencia = () => {
     <div className="container mt-5 containeer-content" id="card-camera">
       <h2 className="text-center mb-4">📌 Registro de Asistencia</h2>
 
-      <div className="card" >
+      <div className="card">
         <div className="card-body text-center">
           {/* Video cámara */}
-          <video ref={videoRef}muted id="card-camera" />
+          <video ref={videoRef} muted id="card-camera" />
 
           {/* Mensaje */}
           {mensaje && (
@@ -92,6 +96,8 @@ const Asistencia = () => {
               className={`alert mt-3 ${
                 mensaje.includes("Error") || mensaje.includes("❌")
                   ? "alert-danger"
+                  : mensaje.includes("⚠️")
+                  ? "alert-warning"
                   : "alert-success"
               }`}
             >

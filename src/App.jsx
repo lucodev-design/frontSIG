@@ -69,7 +69,7 @@ function App() {
         />
         {/* Listar usuarios */}
         <Route
-          path="ListaUsuarios"
+          path="/ListaUsuarios"
           element={
             <PrivateRoute roleRequired={1}>
               <ListUser />

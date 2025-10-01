@@ -20,3 +20,19 @@ Martes 30/09/2025
     - Se mejoro la vista de codigo qr de cada trabajdor dentro de ListUser
     - Se mejoro el editar trabajador ajustado a solo editar (nombre, apellidos y sedes)
     - Proteccion de rutas para administrador y para trabajadores
+
+
+ ___________________________________
+|                                   |
+|                                   |
+|                                   |
+|                                   | 
+ ___________________________________
+    CONETENIDO DE .env
+ # URL del backend en producción (Render)
+VITE_API_URL=https://backend-qoap.onrender.com
+
+# URL local (cuando corres npm run dev)
+# ⚠️ comenta o descomenta según el entorno que uses
+# VITE_API_URL=http://localhost:4000
+

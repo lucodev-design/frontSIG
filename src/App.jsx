@@ -11,6 +11,7 @@ import Asistencia from "./pages/asistencia";
 import AggUsuario from "./pruebasHooks/AggUsuario";
 
 // Importaciones para trabajar dentro de admin
+// justamente par aevitar errore se cargar de paginas
 import GestionUsuario from "./pages/AdminPages/GestionUsuario";
 import ListUser from "./pages/AdminPages/ListUser";
 

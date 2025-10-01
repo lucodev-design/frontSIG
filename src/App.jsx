@@ -7,14 +7,14 @@ import Login from "./components/Login";
 import DashboardUser from "./pages/dashboardUser";
 import DashboardAdmin from "./pages/dashboardAdmin";
 import PrivateRoute from "./components/PrivateRoute";
-import Asistencia from "./pages/Asistencia";   
-// import AddUsuario from "./components/AddUsuario";   
-
-import "./App.css";
+import Asistencia from "./pages/asistencia";
 import AggUsuario from "./pruebasHooks/AggUsuario";
-// importaciones para trabajadr dentro de admin
+
+// Importaciones para trabajar dentro de admin
 import GestionUsuario from "./pages/AdminPages/GestionUsuario";
 import ListUser from "./pages/AdminPages/ListUser";
+
+import "./App.css";
 
 function App() {
   return (
@@ -26,17 +26,8 @@ function App() {
         {/* Login */}
         <Route path="/login" element={<Login />} />
 
-
-
-        {/* Codigo para el formulario  temporal de registros */}
-        <Route path="/agregar-usuario-test" element={<AggUsuario/>} />
-        {/* Gestion de Administrador */}
-        {/* <Route path="/GestionUser" element={<GestionUsuario/>} /> */}
-        {/* <Route path="/ListaUsuarios" element={<ListUser/>} /> */}
-
-
-
-
+        {/* Formulario temporal de registros (sin protección) */}
+        <Route path="/agregar-usuario-test" element={<AggUsuario />} />
 
         {/* Dashboard ADMIN */}
         <Route
@@ -67,7 +58,8 @@ function App() {
             </PrivateRoute>
           }
         />
-        {/* Listar usuarios */}
+
+        {/* Listar usuarios (solo Admin) */}
         <Route
           path="/ListaUsuarios"
           element={
@@ -78,7 +70,12 @@ function App() {
         />
 
         {/* Ruta fallback */}
-        <Route path="*" element={<h2 className="text-center mt-10">404 - Página no encontrada</h2>} />
+        <Route
+          path="*"
+          element={
+            <h2 className="text-center mt-10">404 - Página no encontrada</h2>
+          }
+        />
       </Routes>
     </Router>
   );

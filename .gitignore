@@ -24,8 +24,11 @@ dist-ssr
 *.sw?
 
 
-# URL del backend
-REACT_APP_API_URL=https://backend-qoap.onrender.com
+# # URL del backend
+# REACT_APP_API_URL=https://backend-qoap.onrender.com
 
 # Arcivos txt
 Archivo.txt
+
+# Archivos de entornos
+.env

@@ -1,6 +1,6 @@
 import axios from "axios";
-
 // api.js
+
 export const API_URL = import.meta.env.VITE_API_URL?.trim() || "http://localhost:4000";
 
 // ====== ROLES ======
@@ -76,15 +76,11 @@ export const loginUser = async (email, password) => {
   }
 };
 
-// ====== ASISTENCIAS ======
 
-// Marcar asistencia (entrada/salida)
-export const marcarAsistencia = async (qr, ubicacion) => {
+// Marcar asistencia con QR y ubicación
+export const marcarAsistencia = async (id_usuario, ubicacion) => {
   try {
-    const res = await axios.post(`${API_URL}/api/auth/asistencia/marcar`, {
-      qr,
-      ubicacion,
-    });
+    const res = await axios.post(`${API_URL}/api/auth/asistencia/marcar`, { id_usuario, ubicacion });
     return res.data;
   } catch (err) {
     console.error("❌ Error en marcarAsistencia:", err.response?.data || err.message);
@@ -92,13 +88,14 @@ export const marcarAsistencia = async (qr, ubicacion) => {
   }
 };
 
-// Obtener asistencias (opcional, para admin/reporte)
+
+// Obtener asistencias
 export const getAsistencias = async () => {
   try {
     const res = await axios.get(`${API_URL}/api/auth/asistencias`);
     return res.data;
   } catch (err) {
-    console.error("❌ Error en getAsistencias:", err.response?.data || err.message);
+    console.error("❌ Error en getAsistencias [Frontend]:", err.response?.data || err.message);
     throw err;
   }
 };

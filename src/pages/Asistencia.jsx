@@ -1,9 +1,10 @@
-// src/pages/Asistencias.jsx
+// src/pages/Asistencia.jsx
 import React, { useEffect, useRef, useState } from "react";
 import QrScanner from "qr-scanner";
 import "../templates/styles/asistencia.css";
 
-const API_URL = import.meta.env.VITE_API_URL;
+// 🔹 Función centralizada desde api.js
+import { marcarAsistencia } from "../api/api";
 
 const Asistencia = () => {
   const videoRef = useRef(null);
@@ -19,31 +20,25 @@ const Asistencia = () => {
       scannerRef.current = new QrScanner(
         videoRef.current,
         async (result) => {
-          if (result && result.data && result.data !== ultimoQR) {
+          if (result?.data && result.data !== ultimoQR) {
             setUltimoQR(result.data);
             setCodigoQR(result.data);
 
-            // 🔹 Obtener geolocalización
+            // 📌 aquí el QR contiene el ID del usuario
+            const id_usuario = result.data;
+
+            // Obtener ubicación
             navigator.geolocation.getCurrentPosition(
               async (pos) => {
                 const ubicacion = `${pos.coords.latitude},${pos.coords.longitude}`;
+
                 try {
-                  const res = await fetch(`${API_URL}/api/auth/asistencia/marcar`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ qr: result.data, ubicacion }),
-                  });
+                  const info = await marcarAsistencia(id_usuario, ubicacion);
 
-                  const info = await res.json();
+                  setMensaje(info.mensaje || "✅ Asistencia registrada");
+                  setUsuario(info.usuario || null);
 
-                  if (!res.ok) {
-                    setMensaje(info.mensaje || "❌ Error en el servidor");
-                  } else {
-                    setMensaje(info.mensaje); // ✅ Entrada o salida
-                    setUsuario(info.usuario || null);
-                  }
-
-                  // 🔄 Reiniciar después de 5 segundos
+                  // Reiniciar después de 5 segundos
                   setTimeout(() => {
                     setMensaje("");
                     setUsuario(null);
@@ -52,7 +47,10 @@ const Asistencia = () => {
                   }, 5000);
                 } catch (error) {
                   console.error("❌ Error al registrar asistencia:", error);
-                  setMensaje("❌ Error al registrar asistencia");
+                  setMensaje(
+                    error.response?.data?.mensaje ||
+                      "❌ Error al registrar asistencia"
+                  );
                 }
               },
               (err) => {
@@ -82,13 +80,13 @@ const Asistencia = () => {
   }, [ultimoQR]);
 
   return (
-    <div className="container mt-5 containeer-content" id="card-camera">
+    <div className="container mt-5 containeer-content">
       <h2 className="text-center mb-4">📌 Registro de Asistencia</h2>
 
       <div className="card">
         <div className="card-body text-center">
-          {/* Video cámara */}
-          <video ref={videoRef} muted id="card-camera" />
+          {/* Cámara */}
+          <video ref={videoRef} muted className="video-scan" />
 
           {/* Mensaje */}
           {mensaje && (
@@ -108,15 +106,29 @@ const Asistencia = () => {
           {/* Usuario */}
           {usuario && (
             <div className="alert alert-info mt-2">
-              Usuario: <strong>{usuario.nombre}</strong> <br />
-              Rol: <strong>{usuario.rol}</strong>
+              <p>
+                Usuario: <strong>{usuario.nombre}</strong>
+              </p>
+              <p>
+                Rol: <strong>{usuario.rol}</strong>
+              </p>
+              <p>
+                Hora:{" "}
+                <strong>
+                  {new Date().toLocaleTimeString("es-PE", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  })}
+                </strong>
+              </p>
             </div>
           )}
 
           {/* Código QR leído */}
           {codigoQR && (
             <div className="alert alert-secondary mt-2">
-              <strong>QR leído:</strong> {codigoQR}
+              <strong>QR leído (ID usuario):</strong> {codigoQR}
             </div>
           )}
 

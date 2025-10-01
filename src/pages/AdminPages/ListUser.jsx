@@ -29,11 +29,13 @@ export default function ListUser() {
   // Mensajes
   const [message, setMessage] = useState(null);
 
-  // Cargar sedes + roles primero, luego usuarios (para poder mapear sede_id / rol_id)
   useEffect(() => {
     const init = async () => {
       try {
-        const [sedesData, rolesData] = await Promise.all([getSedes(), getRoles()]);
+        const [sedesData, rolesData] = await Promise.all([
+          getSedes(),
+          getRoles(),
+        ]);
         setSedes(sedesData || []);
         setRoles(rolesData || []);
         await fetchUsers(sedesData || [], rolesData || []);
@@ -46,34 +48,46 @@ export default function ListUser() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // fetchUsers: mapea cada usuario para asegurar que tenga sede_id y rol_id (como strings)
   const fetchUsers = async (sedesArg, rolesArg) => {
     try {
       const sedesToUse = sedesArg || sedes;
       const rolesToUse = rolesArg || roles;
 
-      const data = await getUsers(); // data desde backend
+      const data = await getUsers();
       const mapped = (data || []).map((u) => {
         const userSedeName = (u.sede || "").toString().trim().toLowerCase();
         const userRolName = (u.rol || "").toString().trim().toLowerCase();
 
         const sedeMatch =
           sedesToUse.find((s) => {
-            if (s.id_sede && String(s.id_sede) === String(u.sede_id)) return true;
-            return (s.nombre || "").toString().trim().toLowerCase() === userSedeName;
+            if (s.id_sede && String(s.id_sede) === String(u.sede_id))
+              return true;
+            return (
+              (s.nombre || "").toString().trim().toLowerCase() === userSedeName
+            );
           }) || null;
 
         const rolMatch =
           rolesToUse.find((r) => {
             if (r.id_rol && String(r.id_rol) === String(u.rol_id)) return true;
-            return (r.nombre || "").toString().trim().toLowerCase() === userRolName;
+            return (
+              (r.nombre || "").toString().trim().toLowerCase() === userRolName
+            );
           }) || null;
 
         return {
           ...u,
-          // guardamos como strings para evitar problemas con value del <select>
-          sede_id: sedeMatch ? String(sedeMatch.id_sede) : (u.sede_id ? String(u.sede_id) : ""),
-          rol_id: rolMatch ? String(rolMatch.id_rol) : (u.rol_id ? String(u.rol_id) : ""),
+          sede_id: sedeMatch
+            ? String(sedeMatch.id_sede)
+            : u.sede_id
+            ? String(u.sede_id)
+            : "",
+          rol_id: rolMatch
+            ? String(rolMatch.id_rol)
+            : u.rol_id
+            ? String(u.rol_id)
+            : "",
+          qr_code: u.qr_code || u.id_usuario?.toString(), // fallback
         };
       });
 
@@ -85,7 +99,6 @@ export default function ListUser() {
     }
   };
 
-  // Filtrar por buscador y sede
   useEffect(() => {
     let result = users;
 
@@ -104,21 +117,23 @@ export default function ListUser() {
     if (selectedSede) {
       result = result.filter(
         (u) =>
-          String(u.sede_id) === String(selectedSede) || // comparar por id (string)
+          String(u.sede_id) === String(selectedSede) ||
           (u.sede || "").toLowerCase() ===
-            (sedes.find((s) => String(s.id_sede) === String(selectedSede))?.nombre || "").toLowerCase() // fallback por nombre
+            (
+              sedes.find((s) => String(s.id_sede) === String(selectedSede))
+                ?.nombre || ""
+            ).toLowerCase()
       );
     }
 
     setFilteredUsers(result);
   }, [search, selectedSede, users, sedes]);
 
-  // Eliminar usuario
   const handleDelete = async (id_usuario) => {
     if (!window.confirm("¿Seguro que quieres eliminar este usuario?")) return;
     try {
       await deleteUser(id_usuario);
-      await fetchUsers(); // refrescar (usa sedes/roles ya en estado)
+      await fetchUsers();
       showTempMessage("✅ Usuario eliminado correctamente", "success");
     } catch (err) {
       console.error("❌ Error eliminando usuario:", err);
@@ -126,15 +141,21 @@ export default function ListUser() {
     }
   };
 
-  // QR
-  const handleShowQR = (qrCode) => {
-    setQrSelected(qrCode);
+  // ✅ QR
+  const handleShowQR = (qrCode, userId) => {
+    const code = qrCode || userId?.toString();
+    if (!code) {
+      showTempMessage(
+        "⚠️ Este usuario no tiene un código QR asignado",
+        "warning"
+      );
+      return;
+    }
+    setQrSelected(code);
     setShowQR(true);
   };
 
-  // Editar: abrimos modal y precargamos todos los campos; solo sede será editable si quieres
   const handleEdit = (user) => {
-    // aseguramos que rol_id y sede_id sean strings (ya mapeados por fetchUsers), si no, tratamos de encontrar coincidencia
     const sedeMatch = sedes.find(
       (s) =>
         String(s.id_sede) === String(user.sede_id) ||
@@ -153,13 +174,20 @@ export default function ListUser() {
       dni: user.dni || "",
       email: user.email || "",
       rol: user.rol || (rolMatch ? rolMatch.nombre : ""),
-      rol_id: user.rol_id ? String(user.rol_id) : (rolMatch ? String(rolMatch.id_rol) : ""),
-      sede_id: user.sede_id ? String(user.sede_id) : (sedeMatch ? String(sedeMatch.id_sede) : ""),
+      rol_id: user.rol_id
+        ? String(user.rol_id)
+        : rolMatch
+        ? String(rolMatch.id_rol)
+        : "",
+      sede_id: user.sede_id
+        ? String(user.sede_id)
+        : sedeMatch
+        ? String(sedeMatch.id_sede)
+        : "",
     });
     setShowEdit(true);
   };
 
-  // Guardar cambios: enviar solo los campos que tu backend espera; convertimos id a number
   const handleUpdate = async () => {
     try {
       if (!editingUser) return;
@@ -183,20 +211,19 @@ export default function ListUser() {
       }
 
       setShowEdit(false);
-      await fetchUsers(); // refrescar
+      await fetchUsers();
     } catch (err) {
       console.error("❌ Error actualizando usuario:", err);
       showTempMessage("❌ Error al actualizar usuario", "danger");
     }
   };
 
-  // Mensaje temporal helper
   const showTempMessage = (text, type) => {
     setMessage({ text, type });
     setTimeout(() => setMessage(null), 3000);
   };
 
-  // Columnas
+  // ✅ Columnas
   const columns = [
     { name: "Nombre", selector: (row) => row.nombre, sortable: true },
     { name: "Apellidos", selector: (row) => row.apellidos, sortable: true },
@@ -209,11 +236,13 @@ export default function ListUser() {
       cell: (row) => (
         <Button
           variant="light"
-          onClick={() => handleShowQR(row.qr_code)}
+          onClick={() => handleShowQR(row.qr_code, row.id_usuario)}
           style={{ border: "none", background: "transparent" }}
         >
           <img
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${row.qr_code}`}
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${
+              row.qr_code || row.id_usuario
+            }`}
             alt="QR"
           />
         </Button>
@@ -226,7 +255,11 @@ export default function ListUser() {
           <Button variant="warning" size="sm" onClick={() => handleEdit(row)}>
             ✏️
           </Button>
-          <Button variant="danger" size="sm" onClick={() => handleDelete(row.id_usuario)}>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => handleDelete(row.id_usuario)}
+          >
             🗑️
           </Button>
         </div>
@@ -236,7 +269,6 @@ export default function ListUser() {
 
   return (
     <div className="container mt-4 bg-white p-3 rounded shadow-sm">
-      {/* Botón Asistencia */}
       <button
         onClick={() => (window.location.href = "/add-user")}
         className="btn btn-primary btn-volver mb-3"
@@ -280,33 +312,26 @@ export default function ListUser() {
         responsive
       />
 
-      {/* QR Modal */}
+      {/* ✅ QR Modal */}
       <Modal show={showQR} onHide={() => setShowQR(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>🔗 Código QR</Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center">
-          {qrSelected && (
+          {qrSelected ? (
             <>
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrSelected}`}
                 alt="QR Grande"
               />
-              <div className="mt-3">
-                <a
-                  href={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrSelected}`}
-                  download={`qr_${qrSelected}.png`}
-                  className="btn btn-primary"
-                >
-                  ⬇️ Descargar QR
-                </a>
-              </div>
             </>
+          ) : (
+            <p>⚠️ No hay código QR disponible</p>
           )}
         </Modal.Body>
       </Modal>
 
-      {/* Edit Modal (precargado) */}
+      {/* Edit Modal */}
       <Modal show={showEdit} onHide={() => setShowEdit(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>✏️ Editar Usuario</Modal.Title>
@@ -316,20 +341,39 @@ export default function ListUser() {
             <Form>
               <Form.Group className="mb-2">
                 <Form.Label>Nombre</Form.Label>
-                <Form.Control type="text" value={editingUser.nombre} readOnly />
+                <Form.Control
+                  type="text"
+                  value={editingUser.nombre}
+                  onChange={(e) =>
+                    setEditingUser({ ...editingUser, nombre: e.target.value })
+                  }
+                />
               </Form.Group>
+
               <Form.Group className="mb-2">
                 <Form.Label>Apellidos</Form.Label>
-                <Form.Control type="text" value={editingUser.apellidos} readOnly />
+                <Form.Control
+                  type="text"
+                  value={editingUser.apellidos}
+                  onChange={(e) =>
+                    setEditingUser({
+                      ...editingUser,
+                      apellidos: e.target.value,
+                    })
+                  }
+                />
               </Form.Group>
+
               <Form.Group className="mb-2">
                 <Form.Label>DNI</Form.Label>
                 <Form.Control type="text" value={editingUser.dni} readOnly />
               </Form.Group>
+
               <Form.Group className="mb-2">
                 <Form.Label>Correo</Form.Label>
                 <Form.Control type="email" value={editingUser.email} readOnly />
               </Form.Group>
+
               <Form.Group className="mb-2">
                 <Form.Label>Rol</Form.Label>
                 <Form.Control type="text" value={editingUser.rol} readOnly />

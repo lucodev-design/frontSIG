@@ -19,7 +19,6 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Llamada correcta al loginUser
       const data = await loginUser(form.email, form.password);
 
       if (!data.success) {
@@ -31,6 +30,7 @@ export default function Login() {
       localStorage.setItem("token", data.token);
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("rol", data.user.rol_id); // 👈 guardar rol explícitamente
       }
 
       // Redirección según rol_id
@@ -41,7 +41,7 @@ export default function Login() {
       } else if (rol_id === 2) {
         navigate("/dashboardUser");
       } else {
-        navigate("/dashboardUser"); // fallback
+        navigate("/dashboardUser");
       }
     } catch (err) {
       console.error("Error en login:", err);
@@ -53,7 +53,6 @@ export default function Login() {
 
   return (
     <div className="d-flex align-items-center justify-content-center vh-100 principal-content">
-      {/* Botón Asistencia */}
       <button
         onClick={() => (window.location.href = "/")}
         className="btn btn-primary btn-volver"
@@ -86,7 +85,6 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Campo de contraseña con ojo */}
           <div className="mb-3">
             <label className="form-label">Contraseña</label>
             <div className="wrapper">

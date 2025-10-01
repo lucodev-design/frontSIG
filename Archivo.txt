@@ -5,3 +5,18 @@ Archivos para eliminar por desuso o abandono
 Archivos en uso para el administrador:
     - DashboardAdmin
     - Gestionusurio
+
+
+============= MODIFICACIONES ========================
+Se modifico significativamente la pagina del DashboardAdmin con 
+una mejor interaz ademas de integrarle iconos, en el mismo se le agrego stilos
+
+    - ../templates/styles/DashAdmin.css
+
+Martes 30/09/2025
+    - Se agrego setActivityView para agregar el estado secundarionde gestion de AddUsuarios
+    - Se modifico el formulario de gestionar ausuario al metodo de pasos wizard, con tres pasos
+    y con una barra dinamica, tambien que se muestre el qr la imagen al finalizar el registro del trabajador
+    - Se mejoro la vista de codigo qr de cada trabajdor dentro de ListUser
+    - Se mejoro el editar trabajador ajustado a solo editar (nombre, apellidos y sedes)
+    - Proteccion de rutas para administrador y para trabajadores

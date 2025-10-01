@@ -7,7 +7,7 @@ import Login from "./components/Login";
 import DashboardUser from "./pages/dashboardUser";
 import DashboardAdmin from "./pages/dashboardAdmin";
 import PrivateRoute from "./components/PrivateRoute";
-import Asistencia from "./pages/asistencia";
+import Asistencia from "./pages/Asistencia";
 import AggUsuario from "./pruebasHooks/AggUsuario";
 
 // Importaciones para trabajar dentro de admin

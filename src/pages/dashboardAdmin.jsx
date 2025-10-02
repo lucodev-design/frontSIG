@@ -1,8 +1,24 @@
 // src/pages/DashboardAdmin.jsx
 import React, { useEffect, useState, Suspense, lazy } from "react";
 import { useNavigate } from "react-router-dom";
-import {  Container,  Row,  Col,  Card,  Button,  Navbar,  Nav,  Spinner,} from "react-bootstrap";
-import {  FaUsers,  FaChartBar,  FaCogs,  FaHome,  FaUserPlus,  FaList,} from "react-icons/fa";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Navbar,
+  Nav,
+  Spinner,
+} from "react-bootstrap";
+import {
+  FaUsers,
+  FaChartBar,
+  FaCogs,
+  FaHome,
+  FaUserPlus,
+  FaList,
+} from "react-icons/fa";
 import LogoutButton from "../components/logout";
 import "../templates/styles/DashAdmin.css";
 
@@ -15,8 +31,9 @@ const ListUser = lazy(() => import("../pages/AdminPages/ListUser"));
 const DashboardAdmin = () => {
   const navigate = useNavigate();
   const [nombre, setNombre] = useState("");
-  const [activeView, setActiveView] = useState("home"); // Vista principal
-  const [activeUserView, setActiveUserView] = useState("form"); // Vista interna de Usuarios
+  const [activeView, setActiveView] = useState("home"); 
+  const [activeUserView, setActiveUserView] = useState("form");
+  const [sidebarOpen, setSidebarOpen] = useState(false); // ✅ Sidebar móvil
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -28,50 +45,81 @@ const DashboardAdmin = () => {
     }
   }, [navigate]);
 
+  // ✅ Cerrar sidebar al hacer scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (sidebarOpen) setSidebarOpen(false);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [sidebarOpen]);
+
   return (
     <div className="d-flex" style={{ minHeight: "100vh" }}>
       {/* Sidebar */}
-      <div
-        className="bg-dark text-white d-flex flex-column p-3"
-        style={{ width: "250px" }}
-      >
+      <div className={`sidebar d-flex flex-column p-3 ${sidebarOpen ? "open" : ""}`}>
         <h3 className="text-center mb-4">Admin Panel</h3>
         <Nav className="flex-column nav-list">
           <Nav.Link
             className="text-white mb-2"
-            onClick={() => setActiveView("home")}
+            onClick={() => {
+              setActiveView("home");
+              setSidebarOpen(false);
+            }}
           >
             <FaHome className="me-2" /> Inicio
           </Nav.Link>
           <Nav.Link
             className="text-white mb-2"
-            onClick={() => setActiveView("usuarios")}
+            onClick={() => {
+              setActiveView("usuarios");
+              setSidebarOpen(false);
+            }}
           >
             <FaUsers className="me-2" /> Usuarios
           </Nav.Link>
           <Nav.Link
             className="text-white mb-2"
-            onClick={() => setActiveView("reportes")}
+            onClick={() => {
+              setActiveView("reportes");
+              setSidebarOpen(false);
+            }}
           >
             <FaChartBar className="me-2" /> Reportes
           </Nav.Link>
           <Nav.Link
             className="text-white mb-2"
-            onClick={() => setActiveView("config")}
+            onClick={() => {
+              setActiveView("config");
+              setSidebarOpen(false);
+            }}
           >
             <FaCogs className="me-2" /> Configuración
           </Nav.Link>
         </Nav>
+
+        {/* ✅ Botón cerrar menú solo en móvil */}
+        <Button
+          variant="outline-light"
+          className="mt-auto d-lg-none"
+          onClick={() => setSidebarOpen(false)}
+        >
+          Cerrar menú ✖
+        </Button>
       </div>
 
       {/* Main Content */}
       <div className="flex-grow-1">
         {/* Header */}
-        <Navbar
-          bg="light"
-          className="px-4 shadow-sm"
-          style={{ height: "70px" }}
-        >
+        <Navbar bg="light" className="px-4 shadow-sm" style={{ height: "70px" }}>
+          {/* ✅ Botón hamburguesa solo en pantallas pequeñas */}
+          <Button
+            variant="outline-primary"
+            className="d-lg-none me-3"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            ☰
+          </Button>
           <Navbar.Brand>
             Bienvenido <strong>{nombre}</strong> 👋
           </Navbar.Brand>
@@ -173,8 +221,7 @@ const DashboardAdmin = () => {
           {/* Usuarios */}
           {activeView === "usuarios" && (
             <>
-              {/* Menú interno */}
-              <div className="mb-3 d-flex gap-2">
+              <div className="mb-3 d-flex gap-2 flex-wrap">
                 <Button
                   variant={activeUserView === "form" ? "primary" : "outline-primary"}
                   onClick={() => setActiveUserView("form")}

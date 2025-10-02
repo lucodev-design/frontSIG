@@ -2,8 +2,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import QrScanner from "qr-scanner";
 import "../templates/styles/asistencia.css";
-
-// 🔹 Función centralizada desde api.js
 import { marcarAsistencia } from "../api/api";
 
 const Asistencia = () => {
@@ -24,10 +22,8 @@ const Asistencia = () => {
             setUltimoQR(result.data);
             setCodigoQR(result.data);
 
-            // 📌 aquí el QR contiene el ID del usuario
             const id_usuario = result.data;
 
-            // Obtener ubicación
             navigator.geolocation.getCurrentPosition(
               async (pos) => {
                 const ubicacion = `${pos.coords.latitude},${pos.coords.longitude}`;
@@ -38,7 +34,6 @@ const Asistencia = () => {
                   setMensaje(info.mensaje || "✅ Asistencia registrada");
                   setUsuario(info.usuario || null);
 
-                  // Reiniciar después de 5 segundos
                   setTimeout(() => {
                     setMensaje("");
                     setUsuario(null);
@@ -80,13 +75,15 @@ const Asistencia = () => {
   }, [ultimoQR]);
 
   return (
-    <div className="container mt-5 containeer-content">
-      <h2 className="text-center mb-4">📌 Registro de Asistencia</h2>
+    <div className="asistencia-container">
+      <h2 className="text-center mb-4 title">📌 Registro de Asistencia</h2>
 
-      <div className="card">
+      <div className="asistencia-card shadow">
         <div className="card-body text-center">
           {/* Cámara */}
-          <video ref={videoRef} muted className="video-scan" />
+          <div className="video-wrapper">
+            <video ref={videoRef} muted className="video-scan" />
+          </div>
 
           {/* Mensaje */}
           {mensaje && (
@@ -105,7 +102,7 @@ const Asistencia = () => {
 
           {/* Usuario */}
           {usuario && (
-            <div className="alert alert-info mt-2">
+            <div className="alert alert-info mt-2 text-start">
               <p>
                 Usuario: <strong>{usuario.nombre}</strong>
               </p>
@@ -135,7 +132,7 @@ const Asistencia = () => {
           {/* Botón Login */}
           <button
             onClick={() => (window.location.href = "/login")}
-            className="btn btn-primary mt-3"
+            className="btn btn-primary mt-3 w-100"
           >
             🔑 Ir a Login
           </button>

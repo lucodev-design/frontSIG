@@ -65,7 +65,7 @@ export default function Login() {
         style={{ width: "100%", maxWidth: "400px" }}
       >
         <h2 className="text-center text-primary mb-4">Sistema de Asistencia</h2>
-        <div className="d-flex justify-content-center">
+        <div className="justify-content-center">
           <img className="img-user-login" src="/Sample_User_Icon.png" alt="" />
         </div>
 

@@ -1,3 +1,128 @@
 .nav-list{
     text-align: left;
 }
+/* ============================
+   PANEL ADMIN - ESTILO PRO
+   ============================ */
+
+/* Layout general */
+.d-flex {
+  background: #f8f9fc;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ---------------------------
+   SIDEBAR
+------------------------------ */
+.sidebar {
+  background: #131313;
+  color: #fff;
+  flex-shrink: 0;
+  transition: all 0.3s ease-in-out;
+}
+
+.sidebar h3 {
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 25px;
+  color: #fff;
+}
+
+.sidebar .nav-link {
+  color: #ccc;
+  font-size: 15px;
+  padding: 12px 15px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+  background: #1561f0;
+  color: #fff !important;
+}
+
+/* ---------------------------
+   NAVBAR HEADER
+------------------------------ */
+.navbar {
+  background: #fff !important;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.navbar-brand {
+  font-weight: 600;
+  font-size: 17px;
+  color: #333 !important;
+}
+
+/* ---------------------------
+   TARJETAS DASHBOARD
+------------------------------ */
+.card {
+  border-radius: 12px;
+  border: none;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+
+.card h3 {
+  font-weight: 700;
+  font-size: 26px;
+}
+
+.card h6 {
+  font-size: 14px;
+  color: #777;
+}
+
+/* ---------------------------
+   BOTONES INTERNOS
+------------------------------ */
+.section-buttons button {
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 8px 18px;
+}
+
+/* ---------------------------
+   RESPONSIVE
+------------------------------ */
+
+/* Sidebar ocultable en móviles */
+@media (max-width: 992px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    height: 100%;
+    z-index: 1050;
+    overflow-y: auto;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .flex-grow-1 {
+    margin-left: 0 !important;
+  }
+}
+
+/* Ajustes tarjetas y tipografía en móvil */
+@media (max-width: 768px) {
+  .card h3 {
+    font-size: 22px;
+  }
+
+  .navbar-brand {
+    font-size: 15px;
+  }
+}

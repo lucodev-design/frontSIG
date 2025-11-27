@@ -1,0 +1,161 @@
+/* GestionUsuario.css
+   Estilos modernos y responsivos para el formulario
+   Paleta: #131313, #2B2B2B, #86868B, #1561F0
+*/
+
+/* Variables globales */
+:root {
+  --bg: #131313;
+  --card: #1e1e1e;
+  --muted: #86868B;
+  --accent: #1561F0;
+  --white: #ffffff;
+  --radius: 14px;
+  --gap: 16px;
+  --shadow: 0 8px 24px rgba(0,0,0,0.45);
+  --glass: rgba(255,255,255,0.04);
+}
+
+/* ===== Centrado global ===== */
+.page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+/* ===== Contenedor del formulario ===== */
+.form-container {
+  width: 100%;
+  max-width: 880px;
+  padding: 36px 32px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255,255,255,0.05);
+  animation: fadeInUp .5s ease;
+}
+
+/* Animación de entrada */
+@keyframes fadeInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ===== Título ===== */
+.form-container h2 {
+  margin: 0 0 24px 0;
+  font-size: 1.7rem;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--white);
+  text-align: center;
+}
+
+/* ===== Mensajes de alerta ===== */
+.message {
+  margin: 16px 0;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  text-align: center;
+}
+.message.success {
+  background: rgba(21,97,240,0.12);
+  border: 1px solid rgba(21,97,240,0.25);
+  color: #1e90ff;
+}
+.message.error {
+  background: rgba(255,60,60,0.12);
+  border: 1px solid rgba(255,60,60,0.25);
+  color: #ff4c4c;
+}
+
+/* ===== Grid del formulario ===== */
+form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--gap);
+  margin-top: 8px;
+}
+
+/* Inputs y selects */
+form input,
+form select {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--glass);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--white);
+  border-radius: var(--radius);
+  font-size: 0.96rem;
+  outline: none;
+  transition: border-color .18s ease, box-shadow .18s ease, background .2s ease;
+  box-sizing: border-box;
+}
+
+/* Placeholder */
+form input::placeholder {
+  color: var(--muted);
+}
+
+/* Focus */
+form input:focus,
+form select:focus {
+  border-color: var(--accent);
+  background: rgba(21,97,240,0.08);
+  box-shadow: 0 6px 20px rgba(21,97,240,0.15);
+}
+
+/* Campos que ocupan 2 columnas */
+.form-full {
+  grid-column: 1 / -1;
+}
+
+/* Botón submit */
+button[type="submit"] {
+  grid-column: 1 / -1;
+  appearance: none;
+  border: none;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #1e6ff6, #1561F0);
+  color: var(--white);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform .1s ease, box-shadow .15s ease, opacity .12s ease;
+  box-shadow: 0 8px 28px rgba(21,97,240,0.25);
+}
+button[type="submit"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 32px rgba(21,97,240,0.35);
+}
+button[type="submit"]:active {
+  transform: translateY(0);
+  opacity: 0.95;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .form-container {
+    padding: 28px 22px;
+  }
+}
+@media (max-width: 700px) {
+  form {
+    grid-template-columns: 1fr;
+  }
+  button[type="submit"] {
+    font-size: 0.95rem;
+  }
+}

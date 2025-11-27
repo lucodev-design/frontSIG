@@ -1,0 +1,153 @@
+/* =============================== */
+/*        ESTILOS PRINCIPALES      */
+/* =============================== */
+
+.access-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* background: #f5f5f5; */
+  padding: 20px;
+}
+
+.access-box {
+  /* width: 100%; */
+  max-width: 900px;
+  background: white;
+  display: flex;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 25px rgba(0,0,0,0.15);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+
+
+.view-container.reverse {
+  flex-direction: row-reverse;
+}
+
+/* Vista interna que cambia */
+.view-container {
+  display: flex;
+  width: 100%;
+}
+
+/* Lados */
+.form-side {
+  width: 70%;
+  padding: 30px;
+}
+
+.info-side {
+  width: 60%;
+  background: #CFDBF0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  padding: 30px;
+}
+
+.info-side h1 {
+  font-size: 42px;
+  margin-bottom: 20px;
+  color: #0b1b3f;
+}
+
+.info-side p {
+  background: #2E63BF;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  font-size: 18px;
+}
+
+
+/* Botones */
+.selector-buttons {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.selector-buttons .btn {
+  padding: 12px 25px;
+  border-radius: 10px;
+  background: #2b2b2b;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.selector-buttons .btn.active {
+  background: #1561F0;
+}
+
+/* Animación */
+.fade-slide {
+  animation: fadeSlide 0.35s ease;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =============================== */
+/*        RESPONSIVE REAL          */
+/* =============================== */
+
+@media (max-width: 768px) {
+
+  .access-box {
+    flex-direction: column;
+    max-width: 95%;
+  }
+
+  .view-container {
+    flex-direction: column !important;
+  }
+
+  .info-side {
+    display: none !important;   /* OCULTA PANEL AZUL */
+  }
+
+  .form-side {
+    width: 100% !important;
+    padding: 25px !important;
+  }
+
+  .selector-buttons {
+    width: 100%;
+    max-width: 400px;
+    justify-content: center;
+  }
+
+  .selector-buttons .btn {
+    flex: 1;
+    padding: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .form-side {
+    padding: 20px !important;
+  }
+
+  .selector-buttons .btn {
+    font-size: 14px;
+    padding: 12px;
+  }
+}

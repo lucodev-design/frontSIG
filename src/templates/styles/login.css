@@ -1,0 +1,89 @@
+.principal-content{
+  border-radius: 10px;
+  margin: auto 0 ;  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+}
+/* boton para mostar contraseña */
+/* Contenedor del input con el ojo */
+.wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Input con espacio a la derecha para el ícono */
+.wrapper input {
+  width: 100%;
+  padding: 10px;
+  padding-right: 40px; /* espacio para el ojo */
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+}
+
+.wrapper input:focus {
+  border-color: #1561F0; /* color de tu paleta */
+  box-shadow: 0 0 4px rgba(21, 97, 240, 0.4);
+}
+
+/* Botón del ojo */
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle:hover {
+  color: #1561F0;
+}
+
+
+.img-user-login{
+    border: 1px solid #000;
+    border-radius: 50%;
+    height: 50%;
+}
+img{
+    width: 50%;
+}
+.btn-pass {
+    width: 150px;
+}
+
+/* Boton para volver a la pagina de registara asistencia */
+.btn-volver {
+  position: fixed;       /* se queda fijo aunque hagas scroll */
+  top: 20px;             /* distancia desde arriba */
+  left: 20px;           /* distancia desde la derecha */
+  padding: 8px 16px;
+  background-color: #1561F0;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-volver:hover {
+  background-color: #0e47b7; /* un tono más oscuro al pasar el mouse */
+}
+/* Estilos apra el boton de ir a ver la lista de usuarios */
+.btn-List{
+  margin: 5px;
+}
+.btn-List:hover{
+  background-color: #740000;
+}
+

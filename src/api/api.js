@@ -239,27 +239,9 @@ export const deleteFeriado = async (id_feriado) => {
   return res.data;
 };
 
-// 
-// 
-// 
-// 
-// ==========================================================================
-// 
-// 
-// // CONFIGURACIÓN GLOBAL
-// export const getConfig = async () => {
-//   const res = await fetch(`${API_URL}/api/auth/global`);
-//   return res.json();
-// };
 
-// export const updateConfig = async (data) => {
-//   const res = await fetch(`${API_URL}/api/auth/globalUpdate`, {
-//     method: "PUT",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify(data),
-//   });
-//   return res.json();
-// };
+// ==========================================================================
+
 // 
 export const getConfiguracionGlobal = async () => {
     try {
@@ -280,9 +262,6 @@ export const getConfiguracionGlobal = async () => {
 };
 
 /**
- * Actualiza la configuración global.
- * Endpoint: PUT /api/auth/globalUpdate
- * @param {object} configData - Objeto con los nuevos valores de configuración.
  */
 export const updateConfiguracionGlobal = async (configData) => {
     try {
@@ -318,10 +297,6 @@ export const getReporteConsolidado = async (params) => {
   }
 };
 
-
-// backend/controllers/reportesController.js (dentro de getReporteTrabajador)
-// api.js (getReporteTrabajador)
-
 export const getReporteTrabajador = async (params) => {
   try {
     const res = await axios.get(`${API_URL}/api/super/reportes/trabajador`, {
@@ -356,4 +331,43 @@ export const getGraficosDesempeno = async (sedeSeleccionada) => {
 };
 
 // ===============================================
+// src/api/api.js
 
+// Obtener el último reporte generado de un usuario
+export const getUltimoReporteUsuario = async (id_usuario) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/reportes/ultimo/${id_usuario}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener último reporte:", error);
+    return null;
+  }
+};
+
+// Guardar un nuevo reporte
+export const guardarReporte = async (reporteData) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/reportes`, reporteData);
+    return response.data.reporte;
+  } catch (error) {
+    console.error("Error al guardar reporte:", error);
+    throw error;
+  }
+};
+
+// OPCIONAL: Obtener historial completo de reportes
+export const getReportesUsuario = async (id_usuario, limite = 10) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/reportes/usuario/${id_usuario}?limite=${limite}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener reportes del usuario:", error);
+    throw error;
+  }
+};
+
+// GET    /api/reportes/ultimo/:id_usuario          → Último reporte
+// POST   /api/reportes                             → Guardar reporte
+// GET    /api/reportes/usuario/:id_usuario         → Historial usuario
+// GET    /api/reportes                             → Todos los reportes
+// DELETE /api/reportes/:id_reporte                 → Eliminar reporte

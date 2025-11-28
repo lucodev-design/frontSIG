@@ -1,8 +1,8 @@
 // src/pages/AdminPages/ReporteAsistencia.jsx
 import React, { useState, useEffect } from "react";
-import { getUsers, getAsistenciasByUser } from "../../api/api";
+import { getUsers, getAsistenciasByUser, getUltimoReporteUsuario, guardarReporte } from "../../api/api";
 import DataTable from "react-data-table-component";
-import { Card, Form, Spinner, Button, Modal } from "react-bootstrap";
+import { Card, Form, Spinner, Button, Modal, Alert } from "react-bootstrap";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -15,12 +15,16 @@ const ReporteAsistencia = () => {
   const [selectedUser, setSelectedUser] = useState("");
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingAsistencias, setLoadingAsistencias] = useState(false);
-  const [turnoUsuario, setTurnoUsuario] = useState(""); // <--- NUEVO ESTADO
+  const [turnoUsuario, setTurnoUsuario] = useState("");
 
   // Modal
   const [showModal, setShowModal] = useState(false);
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
+  
+  // Último reporte desde BD
+  const [ultimoReporte, setUltimoReporte] = useState(null);
+  const [loadingReporte, setLoadingReporte] = useState(false);
 
   useEffect(() => {
     const fetchUsuarios = async () => {
@@ -37,17 +41,19 @@ const ReporteAsistencia = () => {
     fetchUsuarios();
   }, []);
 
-  // Cargar asistencias por usuario (UNIFICADO)
+  // Cargar asistencias y último reporte por usuario
   const handleSelectUser = async (e) => {
     const id_usuario = e.target.value;
     setSelectedUser(id_usuario);
     setAsistencias([]);
     setTurnoUsuario("");
+    setUltimoReporte(null);
 
     if (!id_usuario) return;
 
     setLoadingAsistencias(true);
     try {
+      // Cargar asistencias
       const response = await getAsistenciasByUser(id_usuario);
 
       if (response.asistencias) {
@@ -57,37 +63,48 @@ const ReporteAsistencia = () => {
         setAsistencias(response);
         setTurnoUsuario(response[0]?.nombre_turno || "No asignado");
       }
+
+      // Cargar último reporte
+      setLoadingReporte(true);
+      const reporteData = await getUltimoReporteUsuario(id_usuario);
+      if (reporteData) {
+        setUltimoReporte(reporteData);
+      }
     } catch (err) {
-      console.error("❌ Error al obtener asistencias:", err);
+      console.error("❌ Error al obtener datos:", err);
     } finally {
       setLoadingAsistencias(false);
+      setLoadingReporte(false);
     }
+  };
+
+  // Función helper para formatear fechas correctamente
+  const formatFecha = (fecha) => {
+    if (!fecha) return "—";
+    return moment.parseZone(fecha).format("DD/MM/YYYY");
+  };
+
+  // Función helper para formatear horas
+  const formatHora = (hora) => {
+    if (!hora) return "—";
+    return moment(hora).tz("America/Lima").format("HH:mm:ss");
   };
 
   // Columnas
   const columns = [
     {
       name: "📅 Fecha",
-      selector: (row) =>
-        row.fecha
-          ? moment(row.fecha).tz("America/Lima").format("DD/MM/YYYY")
-          : "—",
+      selector: (row) => formatFecha(row.fecha),
       sortable: true,
     },
     {
       name: "⏰ Hora Entrada",
-      selector: (row) =>
-        row.hora_entrada
-          ? moment(row.hora_entrada).tz("America/Lima").format("HH:mm:ss")
-          : "—",
+      selector: (row) => formatHora(row.hora_entrada),
       sortable: true,
     },
     {
       name: "🏁 Hora Salida",
-      selector: (row) =>
-        row.hora_salida
-          ? moment(row.hora_salida).tz("America/Lima").format("HH:mm:ss")
-          : "—",
+      selector: (row) => formatHora(row.hora_salida),
       sortable: true,
     },
     {
@@ -108,16 +125,17 @@ const ReporteAsistencia = () => {
   const filtrarPorRango = () => {
     if (!fechaInicio || !fechaFin) return asistencias;
 
-    const inicio = moment(fechaInicio);
+    const inicio = moment(fechaInicio).startOf("day");
     const fin = moment(fechaFin).endOf("day");
 
-    return asistencias.filter((a) =>
-      moment(a.fecha).isBetween(inicio, fin, null, "[]")
-    );
+    return asistencias.filter((a) => {
+      const fechaAsistencia = moment.parseZone(a.fecha);
+      return fechaAsistencia.isBetween(inicio, fin, null, "[]");
+    });
   };
 
-  // Exportar PDF (ACTUALIZADO)
-  const exportarPDF = () => {
+  // Exportar PDF
+  const exportarPDF = async () => {
     const usuario = usuarios.find((u) => u.id_usuario == selectedUser);
     const dataFiltrada = filtrarPorRango();
 
@@ -145,11 +163,9 @@ const ReporteAsistencia = () => {
       startY: 42,
       head: [["Fecha", "Entrada", "Salida", "Estado", "Descuento"]],
       body: dataFiltrada.map((a) => [
-        moment(a.fecha).format("DD/MM/YYYY"),
-        a.hora_entrada
-          ? moment(a.hora_entrada).format("HH:mm:ss")
-          : "—",
-        a.hora_salida ? moment(a.hora_salida).format("HH:mm:ss") : "—",
+        formatFecha(a.fecha),
+        formatHora(a.hora_entrada),
+        formatHora(a.hora_salida),
         a.estado || "—",
         a.descuento && parseFloat(a.descuento) > 0
           ? parseFloat(a.descuento).toFixed(2)
@@ -157,23 +173,40 @@ const ReporteAsistencia = () => {
       ]),
     });
 
-    doc.save(`reporte_asistencias_${usuario?.nombre || "usuario"}.pdf`);
+    const nombreArchivo = `reporte_asistencias_${usuario?.nombre || "usuario"}.pdf`;
+    doc.save(nombreArchivo);
+    
+    // Guardar en BD
+    try {
+      const reporteData = {
+        id_usuario: selectedUser,
+        tipo_reporte: "PDF",
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin,
+        nombre_archivo: nombreArchivo,
+        total_registros: dataFiltrada.length
+      };
+      
+      const resultado = await guardarReporte(reporteData);
+      if (resultado) {
+        setUltimoReporte(resultado);
+      }
+    } catch (err) {
+      console.error("❌ Error al guardar reporte:", err);
+    }
+    
     setShowModal(false);
   };
 
   // Exportar Excel
-  const exportarExcel = () => {
+  const exportarExcel = async () => {
     const usuario = usuarios.find((u) => u.id_usuario == selectedUser);
     const dataFiltrada = filtrarPorRango();
 
     const dataExcel = dataFiltrada.map((a) => ({
-      Fecha: moment(a.fecha).format("DD/MM/YYYY"),
-      "Hora Entrada": a.hora_entrada
-        ? moment(a.hora_entrada).format("HH:mm:ss")
-        : "—",
-      "Hora Salida": a.hora_salida
-        ? moment(a.hora_salida).format("HH:mm:ss")
-        : "—",
+      Fecha: formatFecha(a.fecha),
+      "Hora Entrada": formatHora(a.hora_entrada),
+      "Hora Salida": formatHora(a.hora_salida),
       Estado: a.estado || "—",
       "Descuento (S/)":
         a.descuento && parseFloat(a.descuento) > 0
@@ -201,7 +234,28 @@ const ReporteAsistencia = () => {
 
     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
 
-    saveAs(data, `reporte_asistencias_${usuario?.nombre || "usuario"}.xlsx`);
+    const nombreArchivo = `reporte_asistencias_${usuario?.nombre || "usuario"}.xlsx`;
+    saveAs(data, nombreArchivo);
+    
+    // Guardar en BD
+    try {
+      const reporteData = {
+        id_usuario: selectedUser,
+        tipo_reporte: "EXCEL",
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin,
+        nombre_archivo: nombreArchivo,
+        total_registros: dataFiltrada.length
+      };
+      
+      const resultado = await guardarReporte(reporteData);
+      if (resultado) {
+        setUltimoReporte(resultado);
+      }
+    } catch (err) {
+      console.error("❌ Error al guardar reporte:", err);
+    }
+    
     setShowModal(false);
   };
 
@@ -273,6 +327,32 @@ const ReporteAsistencia = () => {
           </div>
         )}
 
+        {/* Último reporte generado */}
+        {ultimoReporte && !loadingReporte && (
+          <Alert variant="success" className="mb-3">
+            <div className="d-flex justify-content-between align-items-start">
+              <div>
+                <h6 className="fw-bold mb-2">✅ Último Reporte Generado</h6>
+                <p className="mb-1 small">
+                  <strong>Tipo:</strong>{" "}
+                  <span className={ultimoReporte.tipo_reporte === "PDF" ? "text-danger" : "text-success"}>
+                    {ultimoReporte.tipo_reporte === "PDF" ? "📄 PDF" : "📗 EXCEL"}
+                  </span>
+                </p>
+                <p className="mb-1 small">
+                  <strong>Generado:</strong> {moment(ultimoReporte.fecha_generacion).format("DD/MM/YYYY HH:mm:ss")}
+                </p>
+                <p className="mb-1 small">
+                  <strong>Rango:</strong> {moment(ultimoReporte.fecha_inicio).format("DD/MM/YYYY")} - {moment(ultimoReporte.fecha_fin).format("DD/MM/YYYY")}
+                </p>
+                <p className="mb-0 small">
+                  <strong>Registros:</strong> {ultimoReporte.total_registros}
+                </p>
+              </div>
+            </div>
+          </Alert>
+        )}
+
         {/* Tabla */}
         {loadingAsistencias ? (
           <div className="text-center mt-4">
@@ -312,7 +392,7 @@ const ReporteAsistencia = () => {
                 onChange={(e) => setFechaInicio(e.target.value)}
               />
             </Form.Group>
-            <Form.Group>
+            <Form.Group className="mb-3">
               <Form.Label>Hasta:</Form.Label>
               <Form.Control
                 type="date"
@@ -321,6 +401,29 @@ const ReporteAsistencia = () => {
               />
             </Form.Group>
           </Form>
+
+          {/* Información del último reporte en el modal también */}
+          {ultimoReporte && (
+            <div className="mt-3 p-3 bg-light rounded border">
+              <h6 className="fw-bold text-success mb-2">
+                📊 Último reporte guardado
+              </h6>
+              <div className="small">
+                <p className="mb-1">
+                  <strong>Tipo:</strong>{" "}
+                  <span className={ultimoReporte.tipo_reporte === "PDF" ? "text-danger" : "text-success"}>
+                    {ultimoReporte.tipo_reporte === "PDF" ? "📄 PDF" : "📗 EXCEL"}
+                  </span>
+                </p>
+                <p className="mb-1">
+                  <strong>Fecha:</strong> {moment(ultimoReporte.fecha_generacion).format("DD/MM/YYYY HH:mm")}
+                </p>
+                <p className="mb-0">
+                  <strong>Rango:</strong> {moment(ultimoReporte.fecha_inicio).format("DD/MM/YYYY")} - {moment(ultimoReporte.fecha_fin).format("DD/MM/YYYY")}
+                </p>
+              </div>
+            </div>
+          )}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>

@@ -31,3 +31,4 @@ dist-ssr
 Archivo.txt
 
 # Archivos de entornos
+.env

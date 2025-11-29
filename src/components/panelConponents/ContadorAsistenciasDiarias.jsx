@@ -1,15 +1,16 @@
 // ContadorAsistenciasDiarias.jsx
 import React, { useState, useEffect } from "react";
-import { getConteoDiario } from "../../api/api"; // 👈 Importar desde tu API
+import { getConteoDiario } from "../../api/api";
 
 const ContadorAsistenciasDiarias = () => {
   const [contadorHoy, setContadorHoy] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Obtener la fecha actual en formato YYYY-MM-DD
+  // ✅ CORREGIDO: Obtener la fecha actual en zona horaria de Lima
   const obtenerFechaHoy = () => {
-    const hoy = new Date();
-    return hoy.toISOString().split("T")[0];
+    return new Date().toLocaleDateString('en-CA', { 
+      timeZone: 'America/Lima' 
+    });
   };
 
   // Función para obtener el conteo de asistencias del día desde el backend
@@ -17,7 +18,6 @@ const ContadorAsistenciasDiarias = () => {
     try {
       const fechaHoy = obtenerFechaHoy();
 
-      // 👇 Usar la función importada desde api.js
       const response = await getConteoDiario(fechaHoy);
 
       if (response && typeof response.total === "number") {
@@ -47,7 +47,7 @@ const ContadorAsistenciasDiarias = () => {
     // Actualizar cada 30 segundos para mantener el conteo actualizado
     const intervalo = setInterval(() => {
       obtenerConteoDesdeBackend();
-    }, 30000); // 30 segundos
+    }, 30000);
 
     return () => clearInterval(intervalo);
   }, []);
@@ -56,7 +56,6 @@ const ContadorAsistenciasDiarias = () => {
   const incrementarContador = () => {
     setContadorHoy((prev) => {
       const nuevo = prev + 1;
-      // Guardar en localStorage como respaldo
       localStorage.setItem(
         "asistenciasDiarias",
         JSON.stringify({
@@ -106,6 +105,7 @@ const ContadorAsistenciasDiarias = () => {
             year: "numeric",
             month: "long",
             day: "numeric",
+            timeZone: "America/Lima" // ✅ También corregido aquí
           })}
         </small>
         <button

@@ -436,9 +436,9 @@ const DashboardUser = () => {
               <FaLifeRing className="me-2" /> Soporte
             </Nav.Link>
 
-            <LogoutButton />
+            
           </Nav>
-
+          <LogoutButton />
           <Button variant="outline-light" className="mt-auto d-lg-none" onClick={() => setSidebarOpen(false)}>
             Cerrar menú ✖
           </Button>

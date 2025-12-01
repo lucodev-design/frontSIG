@@ -14,7 +14,7 @@ export default function LogoutButton() {
   return (
     <button 
       onClick={handleLogout} 
-      className="btn btn-danger"
+      className="btn btn-danger mt-auto"
     >
       Cerrar sesión
     </button>

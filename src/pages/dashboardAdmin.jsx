@@ -106,9 +106,9 @@ const DashboardAdmin = () => {
               <FaCogs className="me-2" /> Configuración
             </Nav.Link>            
 
-            <LogoutButton />
           </Nav>
-
+          {/* componente de boton para cerrar secsion */}
+          <LogoutButton />
           <Button
             variant="outline-light"
             className="mt-auto d-lg-none"
@@ -139,7 +139,7 @@ const DashboardAdmin = () => {
             {/* HOME */}
             {activeView === "home" && (
               <>
-                {/* 👇 FILA DE CONTADORES - RESPONSIVA Y CENTRADA */}
+                {/*  FILA DE CONTADORES - RESPONSIVA Y CENTRADA */}
                 <Row className="mb-4 justify-content-center">
                   {/* Contador de Usuarios */}
                   <Col xs={12} sm={6} lg={6} xl={5} className="mb-3 mb-lg-0">

@@ -32,10 +32,31 @@ export const createSede = async (data) => {
   return res.data;
 };
 // -------------Listar SEDES ----------------
+// export const getSedes = async () => {
+//   const res = await axios.get(`${API_URL}/api/auth/sedes`);
+//   return res.data;
+// };
+
+
+// Obtener todas las sedes
 export const getSedes = async () => {
-  const res = await axios.get(`${API_URL}/api/auth/sedes`);
-  return res.data;
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_URL}/api/auth/sedes`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) throw new Error("Error al obtener sedes");
+    return await response.json();
+  } catch (error) {
+    console.error("Error getSedes:", error);
+    return [];
+  }
 };
+
+
 // ====== ACTUALIZAR SEDE ======
 export const updateSede = async (id_sede, data) => {
   const res = await axios.put(`${API_URL}/api/auth/sedes/${id_sede}`, data);
@@ -286,49 +307,146 @@ export const updateConfiguracionGlobal = async (configData) => {
     }
 };
 // ===============================================
-// REPORTES GENERALES
+// // REPORTES GENERALES
+// export const getReporteConsolidado = async (params) => {
+//   try {
+//     const res = await axios.get(`${API_URL}/api/super/reportes/consolidado`, { params });
+//     return res.data.data; // Devuelve solo la data del cuerpo de la respuesta
+//   } catch (error) {
+//     console.error("❌ Error en getReporteConsolidado:", error.response?.data || error.message);
+//     throw error;
+//   }
+// };
+
+// export const getReporteTrabajador = async (params) => {
+//   try {
+//     const res = await axios.get(`${API_URL}/api/super/reportes/trabajador`, {
+//       params,
+//     });
+//     return res.data.data;
+//   } catch (error) {
+//     // Usamos encadenamiento opcional más robusto para evitar errores de lectura
+//     const errorMessage =
+//       error.response?.data || error.message || "Error de red desconocido.";
+//     console.error("❌ Error en getReporteTrabajador:", errorMessage);
+//     throw error; // Lanza el error para que ReportesGenerales lo maneje
+//   }
+// };
+
+// export const getGraficosDesempeno = async (sedeSeleccionada) => {
+//     try {
+//         // La URL base es correcta. Eliminamos el parámetro 'sede=todas' de la URL para evitar duplicados.
+//         const res = await axios.get(`${API_URL}/api/super/reportes/graficos/desempeno`, { 
+//             // Usamos 'params' para enviar el query parameter 'sede'
+//             params: { 
+//                 sede: sedeSeleccionada // Este valor será usado en el backend como req.query.sede
+//             } 
+//         });
+        
+//         return res.data.data; 
+//     } catch (error) {
+//         console.error("❌ Error en getGraficosDesempeno:", error.response?.data || error.message);
+//         // Devolver datos por defecto para que el gráfico no se rompa
+//         return { puntualidad: 0, tardanzas: 0, faltas: 0 };
+//     }
+// };
+
+
+
+
+
+
+
+
+// Codigo actual de modulo de reportes estadisticos
+
 export const getReporteConsolidado = async (params) => {
   try {
-    const res = await axios.get(`${API_URL}/api/super/reportes/consolidado`, { params });
-    return res.data.data; // Devuelve solo la data del cuerpo de la respuesta
+    const token = localStorage.getItem("token");
+    const query = new URLSearchParams(params).toString();
+    const response = await fetch(
+      `${API_URL}/api/reportes-super-admin/consolidado?${query}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!response.ok) throw new Error("Error al obtener reporte");
+    return await response.json();
   } catch (error) {
-    console.error("❌ Error en getReporteConsolidado:", error.response?.data || error.message);
+    console.error("Error getReporteConsolidado:", error);
     throw error;
   }
 };
 
 export const getReporteTrabajador = async (params) => {
   try {
-    const res = await axios.get(`${API_URL}/api/super/reportes/trabajador`, {
-      params,
-    });
-    return res.data.data;
+    const token = localStorage.getItem("token");
+    const query = new URLSearchParams(params).toString();
+    const response = await fetch(
+      `${API_URL}/api/reportes-super-admin/trabajador?${query}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!response.ok) throw new Error("Error al obtener reporte");
+    return await response.json();
   } catch (error) {
-    // Usamos encadenamiento opcional más robusto para evitar errores de lectura
-    const errorMessage =
-      error.response?.data || error.message || "Error de red desconocido.";
-    console.error("❌ Error en getReporteTrabajador:", errorMessage);
-    throw error; // Lanza el error para que ReportesGenerales lo maneje
+    console.error("Error getReporteTrabajador:", error);
+    throw error;
   }
 };
 
-export const getGraficosDesempeno = async (sedeSeleccionada) => {
-    try {
-        // La URL base es correcta. Eliminamos el parámetro 'sede=todas' de la URL para evitar duplicados.
-        const res = await axios.get(`${API_URL}/api/super/reportes/graficos/desempeno`, { 
-            // Usamos 'params' para enviar el query parameter 'sede'
-            params: { 
-                sede: sedeSeleccionada // Este valor será usado en el backend como req.query.sede
-            } 
-        });
-        
-        return res.data.data; 
-    } catch (error) {
-        console.error("❌ Error en getGraficosDesempeno:", error.response?.data || error.message);
-        // Devolver datos por defecto para que el gráfico no se rompa
-        return { puntualidad: 0, tardanzas: 0, faltas: 0 };
-    }
+export const getGraficosDesempeno = async (sede = "todas") => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(
+      `${API_URL}/api/reportes-super-admin/desempeno?sede=${sede}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!response.ok) throw new Error("Error al obtener gráficos");
+    return await response.json();
+  } catch (error) {
+    console.error("Error getGraficosDesempeno:", error);
+    return { puntualidad: 0, tardanzas: 0, faltas: 0 };
+  }
 };
+
+export const getEstadisticasGenerales = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(
+      `${API_URL}/reportes-super-admin/estadisticas`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!response.ok) throw new Error("Error al obtener estadísticas");
+    return await response.json();
+  } catch (error) {
+    console.error("Error getEstadisticasGenerales:", error);
+    return {
+      totalSedes: 0,
+      totalAdmins: 0,
+      totalTrabajadores: 0,
+      asistenciasHoy: 0
+    };
+  }
+};
+
 
 // ===============================================
 // src/api/api.js
@@ -371,3 +489,186 @@ export const getReportesUsuario = async (id_usuario, limite = 10) => {
 // GET    /api/reportes/usuario/:id_usuario         → Historial usuario
 // GET    /api/reportes                             → Todos los reportes
 // DELETE /api/reportes/:id_reporte                 → Eliminar reporte
+
+
+
+// =============================================================================
+// Para el modulo de Reportes Generales (consolidados y exportacines)
+
+// ====================================
+// OBTENER SEDES
+// ====================================
+// export const getSedes = async () => {
+//   try {
+//     const token = localStorage.getItem("token");
+//     const response = await fetch(`${API_URL}/sedes`, {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json",
+//       },
+//     });
+//     if (!response.ok) throw new Error("Error al obtener sedes");
+//     return await response.json();
+//   } catch (error) {
+//     console.error("Error getSedes:", error);
+//     return [];
+//   }
+// };
+
+// ====================================
+// OBTENER USUARIOS POR SEDE
+// ====================================
+export const getUsuariosPorSede = async (sedeId) => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_URL}/api/usuarios/sede/${sedeId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) throw new Error("Error al obtener usuarios");
+    return await response.json();
+  } catch (error) {
+    console.error("Error getUsuariosPorSede:", error);
+    return [];
+  }
+};
+
+// ====================================
+// GENERAR REPORTE CONSOLIDADO (TODAS LAS SEDES)
+// ====================================
+export const generarReporteConsolidado = async (params) => {
+  try {
+    const token = localStorage.getItem("token");
+    const query = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_URL}/api/reportes/consolidado?${query}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Error al generar reporte");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error generarReporteConsolidado:", error);
+    throw error;
+  }
+};
+
+// ====================================
+// GENERAR REPORTE POR SEDE
+// ====================================
+export const generarReportePorSede = async (params) => {
+  try {
+    const token = localStorage.getItem("token");
+    const query = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_URL}/api/reportes/por-sede?${query}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Error al generar reporte");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error generarReportePorSede:", error);
+    throw error;
+  }
+};
+
+// ====================================
+// GENERAR REPORTE POR TRABAJADOR
+// ====================================
+export const generarReportePorTrabajador = async (params) => {
+  try {
+    const token = localStorage.getItem("token");
+    const query = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_URL}/api/reportes/por-trabajador?${query}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Error al generar reporte");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error generarReportePorTrabajador:", error);
+    throw error;
+  }
+};
+
+// ====================================
+// EXPORTAR A EXCEL
+// ====================================
+export const exportarReporteExcel = async (data) => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_URL}/api/reportes/exportar/excel`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) throw new Error("Error al exportar a Excel");
+
+    // Descargar el archivo
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `reporte_${new Date().toISOString().split('T')[0]}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error("Error exportarReporteExcel:", error);
+    throw error;
+  }
+};
+
+// ====================================
+// EXPORTAR A PDF
+// ====================================
+export const exportarReportePDF = async (data) => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_URL}/api/reportes/exportar/pdf`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) throw new Error("Error al exportar a PDF");
+
+    // Descargar el archivo
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `reporte_${new Date().toISOString().split('T')[0]}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error("Error exportarReportePDF:", error);
+    throw error;
+  }
+};

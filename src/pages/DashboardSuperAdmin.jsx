@@ -9,6 +9,9 @@ import LogoutButton from "../components/logout.jsx";
 const GestionUsuarios = lazy(() =>
   import("../pages/AdminPages/GestionUsuario.jsx")
 );
+const ListUser = lazy(() =>
+  import("../pages/AdminPages/ListUser.jsx")
+);
 const GestionSedes = lazy(() =>
   import("../pages/SuperAdminPages/GestionSedesSuperAdmin.jsx")
 );
@@ -22,7 +25,7 @@ const ReportesGenerales = lazy(() =>
   import("./SuperAdminPages/ReportesGenerales.jsx")
 );
 
-// NUEVOS COMPONENTES PARA ADMINISTRADORES
+// COMPONENTES PARA ADMINISTRADORES
 const CrearAdmin = lazy(() =>
   import("../pages/SuperAdminPages/CrearAdmin.jsx")
 );
@@ -36,7 +39,8 @@ const DashboardSuperAdmin = () => {
   const navigate = useNavigate();
   const [nombre, setNombre] = useState("");
   const [activeView, setActiveView] = useState("home");
-  const [activeAdminView, setActiveAdminView] = useState("form"); // Nuevo estado para la subvista de Admins
+  const [activeAdminView, setActiveAdminView] = useState("form");
+  const [activeUserView, setActiveUserView] = useState("form"); // Nuevo estado para trabajadores
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Estado del submenú Gestión
@@ -62,11 +66,11 @@ const DashboardSuperAdmin = () => {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [navigate, sidebarOpen]); // Incluir sidebarOpen como dependencia
+  }, [navigate, sidebarOpen]);
 
   const handleSidebarClick = (view) => {
     setActiveView(view);
-    setSidebarOpen(false); // Cierra el sidebar en móvil al hacer clic
+    setSidebarOpen(false);
   };
 
   return (
@@ -107,11 +111,7 @@ const DashboardSuperAdmin = () => {
             {/* Gestión de Administradores */}
             <Nav.Link
               className={`text-white mb-2 ${
-                activeView === "gestionAdmins" ||
-                activeView === "crearAdmin" ||
-                activeView === "listaAdmins"
-                  ? "active"
-                  : ""
+                activeView === "gestionAdmins" ? "active" : ""
               }`}
               onClick={() => handleSidebarClick("gestionAdmins")}
             >
@@ -157,7 +157,7 @@ const DashboardSuperAdmin = () => {
               )}
             </div>
 
-            {/* Config avanzada (Mantenido el nombre, se asume que es el componente AggUsuario) */}
+            {/* Config avanzada */}
             <Nav.Link
               className={`text-white mb-2 ${
                 activeView === "configuracionesAdmin" ? "active" : ""
@@ -187,8 +187,10 @@ const DashboardSuperAdmin = () => {
               <FaChartLine className="me-2" /> Reportes Generales
             </Nav.Link>
 
-            <LogoutButton />
+            
           </Nav>
+
+          <LogoutButton />
 
           <Button
             variant="outline-light"
@@ -211,12 +213,11 @@ const DashboardSuperAdmin = () => {
             </Button>
             <Navbar.Brand>
               Bienvenido <strong>{nombre}</strong> 
-              {/* poner icono despues del sctrong */}
             </Navbar.Brand>
           </Navbar>
 
           <Container fluid className="p-4" style={{ background: "#f5f6fa" }}>
-            {/* HOME - Estilo de Tarjetas copiado de DashboardAdmin */}
+            {/* HOME - Estilo de Tarjetas */}
             {activeView === "home" && (
               <>
                 <Row className="mb-4">
@@ -224,7 +225,7 @@ const DashboardSuperAdmin = () => {
                     <Card className="shadow-sm border-0">
                       <Card.Body>
                         <h6 className="text-muted">Total de Sedes</h6>
-                        <h3 className="text-primary">5</h3> {/* Dato de ejemplo */}
+                        <h3 className="text-primary">5</h3>
                       </Card.Body>
                     </Card>
                   </Col>
@@ -232,7 +233,7 @@ const DashboardSuperAdmin = () => {
                     <Card className="shadow-sm border-0">
                       <Card.Body>
                         <h6 className="text-muted">Total de Administradores</h6>
-                        <h3 className="text-success">12</h3> {/* Dato de ejemplo */}
+                        <h3 className="text-success">12</h3>
                       </Card.Body>
                     </Card>
                   </Col>
@@ -240,7 +241,7 @@ const DashboardSuperAdmin = () => {
                     <Card className="shadow-sm border-0">
                       <Card.Body>
                         <h6 className="text-muted">Total de Trabajadores</h6>
-                        <h3 className="text-warning">500</h3> {/* Dato de ejemplo */}
+                        <h3 className="text-warning">500</h3>
                       </Card.Body>
                     </Card>
                   </Col>
@@ -277,7 +278,7 @@ const DashboardSuperAdmin = () => {
                           variant="success"
                           onClick={() => {
                             setActiveView("sedes");
-                            setGestionOpen(true); // Abre el submenú para el usuario
+                            setGestionOpen(true);
                           }}
                         >
                           Gestionar Sedes
@@ -307,15 +308,42 @@ const DashboardSuperAdmin = () => {
               </>
             )}
 
-            {/* USUARIOS */}
+            {/* GESTIÓN DE TRABAJADORES - Con botones como en Admin Dashboard */}
             {activeView === "usuarios" && (
-              <Suspense fallback={<Spinner animation="border" className="d-block mx-auto mt-5" />}>
-                {/* Asumiendo que GestionUsuarios es un formulario/lista que se gestiona internamente */}
-                <GestionUsuarios /> 
-              </Suspense>
+              <>
+                <div className="mb-3 d-flex gap-2 flex-wrap">
+                  <Button
+                    variant={
+                      activeUserView === "form" ? "primary" : "outline-primary"
+                    }
+                    onClick={() => setActiveUserView("form")}
+                  >
+                    <FaUserPlus className="me-1" /> Registrar Trabajador
+                  </Button>
+                  <Button
+                    variant={
+                      activeUserView === "list" ? "primary" : "outline-primary"
+                    }
+                    onClick={() => setActiveUserView("list")}
+                  >
+                    <FaList className="me-1" /> Lista de Trabajadores
+                  </Button>
+                </div>
+
+                <Suspense
+                  fallback={
+                    <div className="text-center py-5">
+                      <Spinner animation="border" />
+                    </div>
+                  }
+                >
+                  {activeUserView === "form" && <GestionUsuarios />}
+                  {activeUserView === "list" && <ListUser />}
+                </Suspense>
+              </>
             )}
 
-            {/* GESTIÓN DE ADMINISTRADORES - Implementando la navegación con botones del Admin Dashboard */}
+            {/* GESTIÓN DE ADMINISTRADORES */}
             {activeView === "gestionAdmins" && (
               <>
                 <div className="mb-3 d-flex gap-2 flex-wrap">
@@ -349,22 +377,6 @@ const DashboardSuperAdmin = () => {
                 </Suspense>
               </>
             )}
-
-            {/* FORMULARIO CREAR ADMIN (Obsoleto con el cambio de lógica, pero se deja por si acaso) */}
-            {/* Si usas la nueva lógica de pestañas, puedes eliminar este bloque, si no, debe ir junto a la lista */}
-            {/* {activeView === "crearAdmin" && (
-              <Suspense fallback={<Spinner animation="border" className="d-block mx-auto mt-5" />}>
-                <CrearAdmin />
-              </Suspense>
-            )} */}
-
-            {/* LISTA DE ADMINISTRADORES (Obsoleto con el cambio de lógica, pero se deja por si acaso) */}
-            {/* {activeView === "listaAdmins" && (
-              <Suspense fallback={<Spinner animation="border" className="d-block mx-auto mt-5" />}>
-                <ListaAdmins />
-              </Suspense>
-            )} */}
-
 
             {/* SEDES */}
             {activeView === "sedes" && (

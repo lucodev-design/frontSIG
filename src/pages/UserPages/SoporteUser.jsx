@@ -1,50 +1,107 @@
-// src/modules/user/SoporteUser.jsx
 import React, { useState } from "react";
-import { Card, Form, Button, Alert } from "react-bootstrap";
+import { Card, Form, Button, Alert, Spinner } from "react-bootstrap";
+import { enviarSoporte } from "../../api/api";
 
 const SoporteUser = ({ usuario }) => {
   const [mensaje, setMensaje] = useState("");
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleEnviar = (e) => {
+  const handleEnviar = async (e) => {
     e.preventDefault();
     if (!mensaje.trim()) return;
-    // Aquí iría la llamada a tu API de soporte
-    console.log("Mensaje enviado:", { usuario: usuario.email, mensaje });
-    setSuccess(true);
-    setMensaje("");
-    setTimeout(() => setSuccess(false), 3000);
+
+    setLoading(true);
+
+    try {
+      const res = await enviarSoporte({
+        email: usuario.email,
+        mensaje: mensaje,
+      });
+
+      if (res.success) {
+        setSuccess(true);
+        setMensaje("");
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        alert(res.error || "Error al enviar mensaje");
+      }
+    } catch (error) {
+      alert("Error al conectar con el servidor");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <Card className="shadow-sm border-0">
-      <Card.Body>
-        <h5>Soporte / Contacto</h5>
-        <p>Envía tus consultas o problemas y nuestro equipo te responderá.</p>
+    <div
+      className="d-flex justify-content-center align-items-center"
+      style={{ minHeight: "80vh" }}
+    >
+      <Card
+        className="shadow-lg border-0"
+        style={{ width: "100%", maxWidth: "500px", borderRadius: "15px" }}
+      >
+        <Card.Body className="p-4">
+          <div className="text-center mb-3">
+            <h4 className="fw-bold">Soporte Técnico</h4>
+            <p className="text-muted mb-0">
+              ¿Tienes algún problema? Escríbenos y te ayudamos.
+            </p>
+          </div>
 
-        {success && <Alert variant="success">Mensaje enviado correctamente.</Alert>}
+          {success && (
+            <Alert variant="success" className="text-center">
+              ✅ Mensaje enviado correctamente
+            </Alert>
+          )}
 
-        <Form onSubmit={handleEnviar}>
-          <Form.Group className="mb-3">
-            <Form.Label>Correo</Form.Label>
-            <Form.Control type="email" value={usuario.email} disabled />
-          </Form.Group>
+          <Form onSubmit={handleEnviar}>
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-semibold">Correo</Form.Label>
+              <Form.Control
+                type="email"
+                value={usuario.email}
+                disabled
+                className="rounded-3"
+              />
+            </Form.Group>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Mensaje</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={4}
-              value={mensaje}
-              onChange={(e) => setMensaje(e.target.value)}
-              placeholder="Escribe tu mensaje aquí..."
-            />
-          </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-semibold">Mensaje</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={4}
+                value={mensaje}
+                onChange={(e) => setMensaje(e.target.value)}
+                placeholder="Describe tu problema o consulta..."
+                className="rounded-3"
+                style={{ resize: "none" }}
+              />
+            </Form.Group>
 
-          <Button type="submit" variant="primary">Enviar</Button>
-        </Form>
-      </Card.Body>
-    </Card>
+            <div className="d-grid">
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={loading}
+                className="rounded-3 fw-semibold"
+                style={{ transition: "all 0.3s ease" }}
+              >
+                {loading ? (
+                  <>
+                    <Spinner size="sm" animation="border" className="me-2" />
+                    Enviando...
+                  </>
+                ) : (
+                  "Enviar mensaje"
+                )}
+              </Button>
+            </div>
+          </Form>
+        </Card.Body>
+      </Card>
+    </div>
   );
 };
 

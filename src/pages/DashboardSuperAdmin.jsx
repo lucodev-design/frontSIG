@@ -19,7 +19,7 @@ const GestionRoles = lazy(() =>
   import("../pages/SuperAdminPages/GestionRolesSuperAdmin.jsx")
 );
 const ConfiguracionGlobal = lazy(() =>
-  import("../pages/AdminPages/ConfiguracionGlobal.jsx")
+  import("../pages/SuperAdminPages/SoporteSuperAdmin/SoporteAdmin.jsx")
 );
 const ReportesGenerales = lazy(() =>
   import("./SuperAdminPages/ReportesGenerales.jsx")

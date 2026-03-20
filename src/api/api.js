@@ -672,3 +672,38 @@ export const exportarReportePDF = async (data) => {
     throw error;
   }
 };
+
+// ====== SOPORTE ======
+export const enviarSoporte = async (data) => {
+  try {
+    const res = await axios.post(`${API_URL}/api/soporte`, data);
+    return res.data;
+  } catch (error) {
+    console.error("❌ Error en enviarSoporte:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Obtener todos los mensajes (Listar)
+export const getSoportes = async () => {
+  try {
+    const res = await axios.get(`${API_URL}/api/listar`);
+    return res.data;
+  } catch (error) {
+    console.error("❌ Error en getSoportes:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Actualizar estado
+export const updateSoporte = async (id, estado) => {
+  try {
+    const res = await axios.put(`${API_URL}/api/soporte/${id}`, {
+      estado,
+    });
+    return res.data;
+  } catch (error) {
+    console.error("❌ Error en updateSoporte:", error.response?.data || error.message);
+    throw error;
+  }
+};

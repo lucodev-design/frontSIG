@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Card,
   Table,
@@ -23,20 +23,23 @@ const SoporteAdmin = () => {
   const [showModal, setShowModal] = useState(false);
   const [soporteSeleccionado, setSoporteSeleccionado] = useState(null);
 
-  // 🔔 Notificación simple
-  const [ultimoConteo, setUltimoConteo] = useState(0);
+  // 🔥 FIX: usar useRef para evitar problema de estado stale en Netlify
+  const ultimoConteoRef = useRef(0);
 
   const cargarSoportes = async () => {
     try {
       const data = await getSoportes();
-      setSoportes(data);
 
-      // 🔔 Detectar nuevos mensajes
-      if (ultimoConteo !== 0 && data.length > ultimoConteo) {
-        alert("📩 Nuevo mensaje de soporte recibido");
+      // 🔔 detectar nuevos mensajes correctamente
+      if (
+        ultimoConteoRef.current !== 0 &&
+        data.length > ultimoConteoRef.current
+      ) {
+        console.log("📩 Nuevo mensaje detectado");
       }
 
-      setUltimoConteo(data.length);
+      ultimoConteoRef.current = data.length;
+      setSoportes(data);
     } catch (error) {
       console.error("Error cargando soportes:", error);
     } finally {
@@ -47,10 +50,10 @@ const SoporteAdmin = () => {
   useEffect(() => {
     cargarSoportes();
 
-    // 🔔 Polling cada 10 segundos
+    // 🔥 FIX: polling más frecuente y confiable
     const interval = setInterval(() => {
       cargarSoportes();
-    }, 10000);
+    }, 5000); // ahora cada 5s
 
     return () => clearInterval(interval);
   }, []);
@@ -61,6 +64,7 @@ const SoporteAdmin = () => {
     try {
       await updateSoporte(id, nuevoEstado);
 
+      // 🔥 actualizar UI inmediatamente
       setSoportes((prev) =>
         prev.map((item) =>
           item.id === id ? { ...item, estado: nuevoEstado } : item
@@ -100,7 +104,7 @@ const SoporteAdmin = () => {
   return (
     <div className="p-4">
 
-      {/* 📊 CARDS DE ESTADÍSTICAS */}
+      {/* 📊 CARDS */}
       <Row className="mb-4">
         <Col md={4}>
           <Card className="shadow-sm text-center p-3">

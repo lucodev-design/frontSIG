@@ -10,9 +10,15 @@ const SoporteUser = ({ usuario }) => {
   const handleEnviar = async (e) => {
     e.preventDefault();
 
-    if (!mensaje.trim()) return;
+    if (!mensaje.trim() || loading) return; // evita doble envío
 
     setLoading(true);
+
+    // ⏱️ timeout de seguridad (10s)
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      alert("El servidor tardó demasiado. Intenta nuevamente.");
+    }, 10000);
 
     try {
       const res = await enviarSoporte({
@@ -20,9 +26,15 @@ const SoporteUser = ({ usuario }) => {
         mensaje: mensaje,
       });
 
-      console.log("Respuesta:", res);
+      console.log("Respuesta backend:", res);
 
-      if (res && !res.error) {
+      // ✅ validación flexible (para cualquier backend)
+      const ok =
+        res?.success === true ||
+        res?.ok === true ||
+        typeof res?.message === "string";
+
+      if (ok) {
         window.dispatchEvent(new Event("nuevo_soporte"));
 
         setSuccess(true);
@@ -33,10 +45,11 @@ const SoporteUser = ({ usuario }) => {
         alert(res?.error || "Error al enviar mensaje");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error:", error);
       alert("Error al conectar con el servidor");
     } finally {
-      setLoading(false);
+      clearTimeout(timeout); // limpia timeout
+      setLoading(false);     // 🔥 SIEMPRE se ejecuta
     }
   };
 
@@ -93,7 +106,6 @@ const SoporteUser = ({ usuario }) => {
                 variant="primary"
                 disabled={loading}
                 className="rounded-3 fw-semibold"
-                style={{ transition: "all 0.3s ease" }}
               >
                 {loading ? (
                   <>

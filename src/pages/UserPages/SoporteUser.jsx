@@ -6,15 +6,15 @@ const SoporteUser = ({ usuario }) => {
   const [mensaje, setMensaje] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [formKey, setFormKey] = useState(0); // 🔑 fuerza re-render del form
 
   const handleEnviar = async (e) => {
     e.preventDefault();
 
-    if (!mensaje.trim() || loading) return; // evita doble envío
+    if (!mensaje.trim() || loading) return;
 
     setLoading(true);
 
-    // ⏱️ timeout de seguridad (10s)
     const timeout = setTimeout(() => {
       setLoading(false);
       alert("El servidor tardó demasiado. Intenta nuevamente.");
@@ -26,9 +26,6 @@ const SoporteUser = ({ usuario }) => {
         mensaje: mensaje,
       });
 
-      console.log("Respuesta backend:", res);
-
-      // ✅ validación flexible (para cualquier backend)
       const ok =
         res?.success === true ||
         res?.ok === true ||
@@ -37,10 +34,13 @@ const SoporteUser = ({ usuario }) => {
       if (ok) {
         window.dispatchEvent(new Event("nuevo_soporte"));
 
-        setSuccess(true);
+        // ✅ Resetea el formulario completamente
         setMensaje("");
+        setFormKey((prev) => prev + 1);
+        setSuccess(true);
 
-        setTimeout(() => setSuccess(false), 3000);
+        // Oculta el mensaje de éxito después de 4 segundos
+        setTimeout(() => setSuccess(false), 4000);
       } else {
         alert(res?.error || "Error al enviar mensaje");
       }
@@ -48,8 +48,8 @@ const SoporteUser = ({ usuario }) => {
       console.error("Error:", error);
       alert("Error al conectar con el servidor");
     } finally {
-      clearTimeout(timeout); // limpia timeout
-      setLoading(false);     // 🔥 SIEMPRE se ejecuta
+      clearTimeout(timeout);
+      setLoading(false);
     }
   };
 
@@ -70,13 +70,15 @@ const SoporteUser = ({ usuario }) => {
             </p>
           </div>
 
+          {/* ✅ Alert más visible con animación */}
           {success && (
-            <Alert variant="success" className="text-center">
-              ✅ Mensaje enviado correctamente
+            <Alert variant="success" className="text-center fw-semibold fs-6">
+              ✅ ¡Mensaje enviado correctamente! Nos pondremos en contacto pronto.
             </Alert>
           )}
 
-          <Form onSubmit={handleEnviar}>
+          {/* 🔑 key={formKey} fuerza el re-render limpio del formulario */}
+          <Form key={formKey} onSubmit={handleEnviar}>
             <Form.Group className="mb-3">
               <Form.Label className="fw-semibold">Correo</Form.Label>
               <Form.Control
@@ -104,7 +106,7 @@ const SoporteUser = ({ usuario }) => {
               <Button
                 type="submit"
                 variant="primary"
-                disabled={loading}
+                disabled={loading || !mensaje.trim()} // 🚫 deshabilitado si está vacío
                 className="rounded-3 fw-semibold"
               >
                 {loading ? (

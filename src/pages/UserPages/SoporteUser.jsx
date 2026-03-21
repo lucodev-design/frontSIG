@@ -9,6 +9,7 @@ const SoporteUser = ({ usuario }) => {
 
   const handleEnviar = async (e) => {
     e.preventDefault();
+
     if (!mensaje.trim()) return;
 
     setLoading(true);
@@ -19,17 +20,20 @@ const SoporteUser = ({ usuario }) => {
         mensaje: mensaje,
       });
 
-      // Dispara la actualización
-      window.dispatchEvent(new Event("nuevo_soporte"));
+      console.log("Respuesta:", res);
 
-      if (res.success) {
+      if (res && !res.error) {
+        window.dispatchEvent(new Event("nuevo_soporte"));
+
         setSuccess(true);
         setMensaje("");
+
         setTimeout(() => setSuccess(false), 3000);
       } else {
-        alert(res.error || "Error al enviar mensaje");
+        alert(res?.error || "Error al enviar mensaje");
       }
     } catch (error) {
+      console.error(error);
       alert("Error al conectar con el servidor");
     } finally {
       setLoading(false);

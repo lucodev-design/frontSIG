@@ -19,6 +19,9 @@ const SoporteUser = ({ usuario }) => {
         mensaje: mensaje,
       });
 
+      // Dispara la actualización
+      window.dispatchEvent(new Event("nuevo_soporte"));
+
       if (res.success) {
         setSuccess(true);
         setMensaje("");

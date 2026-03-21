@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Card,
   Table,
@@ -23,22 +23,10 @@ const SoporteAdmin = () => {
   const [showModal, setShowModal] = useState(false);
   const [soporteSeleccionado, setSoporteSeleccionado] = useState(null);
 
-  // 🔥 FIX: usar useRef para evitar problema de estado stale en Netlify
-  const ultimoConteoRef = useRef(0);
-
   const cargarSoportes = async () => {
     try {
+      setLoading(true);
       const data = await getSoportes();
-
-      // 🔔 detectar nuevos mensajes correctamente
-      if (
-        ultimoConteoRef.current !== 0 &&
-        data.length > ultimoConteoRef.current
-      ) {
-        console.log("📩 Nuevo mensaje detectado");
-      }
-
-      ultimoConteoRef.current = data.length;
       setSoportes(data);
     } catch (error) {
       console.error("Error cargando soportes:", error);
@@ -50,12 +38,17 @@ const SoporteAdmin = () => {
   useEffect(() => {
     cargarSoportes();
 
-    // 🔥 FIX: polling más frecuente y confiable
-    const interval = setInterval(() => {
+    //  ESCUCHAR EVENTO CUANDO SE ENVÍA MENSAJE DESDE OTRO COMPONENTE
+    const handleNuevoSoporte = () => {
+      console.log("🔄 Recargando soportes por nuevo mensaje...");
       cargarSoportes();
-    }, 5000); // ahora cada 5s
+    };
 
-    return () => clearInterval(interval);
+    window.addEventListener("nuevo_soporte", handleNuevoSoporte);
+
+    return () => {
+      window.removeEventListener("nuevo_soporte", handleNuevoSoporte);
+    };
   }, []);
 
   const cambiarEstado = async (id, estadoActual) => {
@@ -64,7 +57,6 @@ const SoporteAdmin = () => {
     try {
       await updateSoporte(id, nuevoEstado);
 
-      // 🔥 actualizar UI inmediatamente
       setSoportes((prev) =>
         prev.map((item) =>
           item.id === id ? { ...item, estado: nuevoEstado } : item
@@ -75,7 +67,7 @@ const SoporteAdmin = () => {
     }
   };
 
-  // 📊 Contadores
+  // Contadores
   const total = soportes.length;
   const pendientes = soportes.filter((s) => s.estado === "pendiente").length;
   const atendidos = soportes.filter((s) => s.estado === "atendido").length;
@@ -104,7 +96,7 @@ const SoporteAdmin = () => {
   return (
     <div className="p-4">
 
-      {/* 📊 CARDS */}
+      {/*  CARDS */}
       <Row className="mb-4">
         <Col md={4}>
           <Card className="shadow-sm text-center p-3">
@@ -130,7 +122,14 @@ const SoporteAdmin = () => {
 
       <Card className="shadow-lg border-0" style={{ borderRadius: "15px" }}>
         <Card.Body>
-          <h4 className="fw-bold mb-3">📩 Mensajes de Soporte</h4>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h4 className="fw-bold m-0">📩 Mensajes de Soporte</h4>
+
+            {/* 🔥 BOTÓN MANUAL */}
+            <Button variant="outline-primary" size="sm" onClick={cargarSoportes}>
+              🔄 Actualizar
+            </Button>
+          </div>
 
           {/* FILTROS */}
           <div className="d-flex gap-2 mb-3 flex-wrap">

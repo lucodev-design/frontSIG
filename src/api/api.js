@@ -674,45 +674,26 @@ export const exportarReportePDF = async (data) => {
 };
 
 // ====== SOPORTE ======
-// export const enviarSoporte = async (data) => {
-//   try {
-//     const res = await axios.post(`${API_URL}/api/soporte`, data);
-//     return res.data;
-//   } catch (error) {
-//     console.error("❌ Error en enviarSoporte:", error.response?.data || error.message);
-//     throw error;
-//   }
-// };
-// ====== SOPORTE ======
 export const enviarSoporte = async (data) => {
   try {
     const res = await axios.post(`${API_URL}/api/soporte`, data);
-
-    // 4 Siempre retorna un objeto con estructura consistente
     return {
       success: true,
       message: res.data?.message || "Mensaje enviado correctamente",
       data: res.data,
     };
-
   } catch (error) {
     const mensaje =
       error.response?.data?.message ||
       error.response?.data?.error ||
       error.message ||
       "Error desconocido";
-
     console.error("❌ Error en enviarSoporte:", mensaje);
-
-    // ✅ Retorna objeto de error en lugar de lanzar excepción
-    return {
-      success: false,
-      error: mensaje,
-    };
+    return { success: false, error: mensaje };
   }
 };
 
-// Obtener todos los mensajes (Listar)
+// Obtener todos los mensajes
 export const getSoportes = async () => {
   try {
     const res = await axios.get(`${API_URL}/api/listar`);
@@ -726,12 +707,23 @@ export const getSoportes = async () => {
 // Actualizar estado
 export const updateSoporte = async (id, estado) => {
   try {
-    const res = await axios.put(`${API_URL}/api/soporte/${id}`, {
-      estado,
-    });
+    const res = await axios.put(`${API_URL}/api/soporte/${id}`, { estado });
     return res.data;
   } catch (error) {
     console.error("❌ Error en updateSoporte:", error.response?.data || error.message);
     throw error;
+  }
+};
+
+// ✅ NUEVO — Eliminar soporte
+export const deleteSoporte = async (id) => {
+  try {
+    const res = await axios.delete(`${API_URL}/api/soporte/${id}`);
+    return { success: true, data: res.data };
+  } catch (error) {
+    const mensaje =
+      error.response?.data?.error || error.message || "Error desconocido";
+    console.error("❌ Error en deleteSoporte:", mensaje);
+    return { success: false, error: mensaje };
   }
 };

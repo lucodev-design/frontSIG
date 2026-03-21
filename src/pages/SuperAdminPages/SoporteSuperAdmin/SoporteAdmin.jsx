@@ -1,27 +1,22 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Card,
-  Table,
-  Badge,
-  Button,
-  Spinner,
-  Form,
-  InputGroup,
-  Modal,
-  Row,
-  Col,
+  Card, Table, Badge, Button, Spinner,
+  Form, InputGroup, Modal, Row, Col,
 } from "react-bootstrap";
-import { getSoportes, updateSoporte } from "../../../api/api";
+import { getSoportes, updateSoporte, deleteSoporte } from "../../../api/api"; // ✅
 
 const SoporteAdmin = () => {
   const [soportes, setSoportes] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [busqueda, setBusqueda] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
-
   const [showModal, setShowModal] = useState(false);
   const [soporteSeleccionado, setSoporteSeleccionado] = useState(null);
+
+  // ✅ Estado para confirmar eliminación
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [idAEliminar, setIdAEliminar] = useState(null);
+  const [loadingEliminar, setLoadingEliminar] = useState(false);
 
   const cargarSoportes = async () => {
     try {
@@ -37,66 +32,58 @@ const SoporteAdmin = () => {
 
   useEffect(() => {
     cargarSoportes();
-
-    //  ESCUCHAR EVENTO CUANDO SE ENVÍA MENSAJE DESDE OTRO COMPONENTE
-    const handleNuevoSoporte = () => {
-      console.log("🔄 Recargando soportes por nuevo mensaje...");
-      cargarSoportes();
-    };
-
+    const handleNuevoSoporte = () => cargarSoportes();
     window.addEventListener("nuevo_soporte", handleNuevoSoporte);
-
-    return () => {
-      window.removeEventListener("nuevo_soporte", handleNuevoSoporte);
-    };
+    return () => window.removeEventListener("nuevo_soporte", handleNuevoSoporte);
   }, []);
 
   const cambiarEstado = async (id, estadoActual) => {
     const nuevoEstado = estadoActual === "pendiente" ? "atendido" : "pendiente";
-
     try {
       await updateSoporte(id, nuevoEstado);
-
       setSoportes((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, estado: nuevoEstado } : item
-        )
+        prev.map((item) => item.id === id ? { ...item, estado: nuevoEstado } : item)
       );
     } catch (error) {
       console.error("Error actualizando estado:", error);
     }
   };
 
-  // Contadores
+  // ✅ Abrir modal de confirmación
+  const confirmarEliminar = (id) => {
+    setIdAEliminar(id);
+    setShowConfirm(true);
+  };
+
+  // ✅ Ejecutar eliminación
+  const handleEliminar = async () => {
+    setLoadingEliminar(true);
+    const res = await deleteSoporte(idAEliminar);
+    if (res.success) {
+      setSoportes((prev) => prev.filter((item) => item.id !== idAEliminar));
+    } else {
+      alert(res.error || "Error al eliminar");
+    }
+    setLoadingEliminar(false);
+    setShowConfirm(false);
+    setIdAEliminar(null);
+  };
+
   const total = soportes.length;
   const pendientes = soportes.filter((s) => s.estado === "pendiente").length;
   const atendidos = soportes.filter((s) => s.estado === "atendido").length;
 
   const soportesFiltrados = useMemo(() => {
     return soportes
-      .filter((item) =>
-        item.email.toLowerCase().includes(busqueda.toLowerCase())
-      )
-      .filter((item) => {
-        if (estadoFiltro === "todos") return true;
-        return item.estado === estadoFiltro;
-      });
+      .filter((item) => item.email.toLowerCase().includes(busqueda.toLowerCase()))
+      .filter((item) => estadoFiltro === "todos" ? true : item.estado === estadoFiltro);
   }, [soportes, busqueda, estadoFiltro]);
 
-  const abrirModal = (item) => {
-    setSoporteSeleccionado(item);
-    setShowModal(true);
-  };
-
-  const cerrarModal = () => {
-    setShowModal(false);
-    setSoporteSeleccionado(null);
-  };
+  const abrirModal = (item) => { setSoporteSeleccionado(item); setShowModal(true); };
+  const cerrarModal = () => { setShowModal(false); setSoporteSeleccionado(null); };
 
   return (
     <div className="p-4">
-
-      {/*  CARDS */}
       <Row className="mb-4">
         <Col md={4}>
           <Card className="shadow-sm text-center p-3">
@@ -104,14 +91,12 @@ const SoporteAdmin = () => {
             <h3>{total}</h3>
           </Card>
         </Col>
-
         <Col md={4}>
           <Card className="shadow-sm text-center p-3 border-warning">
             <h6>Pendientes</h6>
             <h3 className="text-warning">{pendientes}</h3>
           </Card>
         </Col>
-
         <Col md={4}>
           <Card className="shadow-sm text-center p-3 border-success">
             <h6>Atendidos</h6>
@@ -124,14 +109,11 @@ const SoporteAdmin = () => {
         <Card.Body>
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h4 className="fw-bold m-0">📩 Mensajes de Soporte</h4>
-
-            {/* 🔥 BOTÓN MANUAL */}
             <Button variant="outline-primary" size="sm" onClick={cargarSoportes}>
               🔄 Actualizar
             </Button>
           </div>
 
-          {/* FILTROS */}
           <div className="d-flex gap-2 mb-3 flex-wrap">
             <InputGroup style={{ maxWidth: "300px" }}>
               <Form.Control
@@ -140,7 +122,6 @@ const SoporteAdmin = () => {
                 onChange={(e) => setBusqueda(e.target.value)}
               />
             </InputGroup>
-
             <Form.Select
               style={{ maxWidth: "200px" }}
               value={estadoFiltro}
@@ -153,9 +134,7 @@ const SoporteAdmin = () => {
           </div>
 
           {loading ? (
-            <div className="text-center py-5">
-              <Spinner animation="border" />
-            </div>
+            <div className="text-center py-5"><Spinner animation="border" /></div>
           ) : (
             <Table hover responsive className="align-middle">
               <thead className="table-light">
@@ -165,56 +144,50 @@ const SoporteAdmin = () => {
                   <th>Mensaje</th>
                   <th>Fecha</th>
                   <th>Estado</th>
-                  <th>Acción</th>
+                  <th>Acciones</th> {/* ✅ plural */}
                 </tr>
               </thead>
-
               <tbody>
                 {soportesFiltrados.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="text-center text-muted">
-                      No hay resultados
-                    </td>
+                    <td colSpan="6" className="text-center text-muted">No hay resultados</td>
                   </tr>
                 ) : (
                   soportesFiltrados.map((item, index) => (
                     <tr key={item.id}>
                       <td>{index + 1}</td>
                       <td>{item.email}</td>
-
                       <td style={{ maxWidth: "250px" }}>
                         <div
-                          style={{
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            cursor: "pointer",
-                          }}
+                          style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", cursor: "pointer" }}
                           onClick={() => abrirModal(item)}
                         >
                           {item.mensaje}
                         </div>
                       </td>
-
                       <td>{new Date(item.fecha).toLocaleString()}</td>
-
                       <td>
                         <Badge bg={item.estado === "pendiente" ? "warning" : "success"}>
                           {item.estado}
                         </Badge>
                       </td>
-
-                      <td>
+                      <td className="d-flex gap-2">
+                        {/* Botón estado */}
                         <Button
                           size="sm"
-                          variant={
-                            item.estado === "pendiente"
-                              ? "outline-success"
-                              : "outline-secondary"
-                          }
+                          variant={item.estado === "pendiente" ? "outline-success" : "outline-secondary"}
                           onClick={() => cambiarEstado(item.id, item.estado)}
                         >
                           {item.estado === "pendiente" ? "Atender" : "Reabrir"}
+                        </Button>
+
+                        {/* ✅ Botón eliminar */}
+                        <Button
+                          size="sm"
+                          variant="outline-danger"
+                          onClick={() => confirmarEliminar(item.id)}
+                        >
+                          🗑️
                         </Button>
                       </td>
                     </tr>
@@ -226,7 +199,7 @@ const SoporteAdmin = () => {
         </Card.Body>
       </Card>
 
-      {/* MODAL */}
+      {/* Modal detalle mensaje */}
       <Modal show={showModal} onHide={cerrarModal} centered>
         <Modal.Header closeButton>
           <Modal.Title>Detalle del mensaje</Modal.Title>
@@ -243,6 +216,24 @@ const SoporteAdmin = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={cerrarModal}>Cerrar</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* ✅ Modal confirmación eliminar */}
+      <Modal show={showConfirm} onHide={() => setShowConfirm(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>¿Eliminar mensaje?</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Esta acción no se puede deshacer. ¿Estás seguro de que deseas eliminar este mensaje?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowConfirm(false)} disabled={loadingEliminar}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={handleEliminar} disabled={loadingEliminar}>
+            {loadingEliminar ? <Spinner size="sm" animation="border" /> : "Sí, eliminar"}
+          </Button>
         </Modal.Footer>
       </Modal>
     </div>

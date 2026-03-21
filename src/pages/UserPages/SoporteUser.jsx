@@ -34,7 +34,7 @@ const SoporteUser = ({ usuario }) => {
       if (ok) {
         window.dispatchEvent(new Event("nuevo_soporte"));
 
-        // ✅ Resetea el formulario completamente
+        //  Resetea el formulario completamente
         setMensaje("");
         setFormKey((prev) => prev + 1);
         setSuccess(true);
@@ -70,10 +70,10 @@ const SoporteUser = ({ usuario }) => {
             </p>
           </div>
 
-          {/* ✅ Alert más visible con animación */}
+          {/*  Alert más visible con animación */}
           {success && (
             <Alert variant="success" className="text-center fw-semibold fs-6">
-              ✅ ¡Mensaje enviado correctamente! Nos pondremos en contacto pronto.
+               ¡Mensaje enviado correctamente! Nos pondremos en contacto pronto.
             </Alert>
           )}
 
@@ -106,7 +106,7 @@ const SoporteUser = ({ usuario }) => {
               <Button
                 type="submit"
                 variant="primary"
-                disabled={loading || !mensaje.trim()} // 🚫 deshabilitado si está vacío
+                disabled={loading || !mensaje.trim()} //  deshabilitado si está vacío
                 className="rounded-3 fw-semibold"
               >
                 {loading ? (

@@ -107,48 +107,63 @@ const TurnosTable = () => {
         ➕ Nuevo Turno
       </Button>
 
-      <Table striped bordered hover>
-        <thead className="table-primary">
-          <tr>
-            <th>#</th>
-            <th>Nombre</th>
-            <th>Inicio</th>
-            <th>Fin</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {turnos.length > 0 ? (
-            turnos.map((t, i) => (
-              <tr key={t.id_turno}>
-                <td>{i + 1}</td>
-                <td>{t.nombre_turno}</td>
-                <td>{t.hora_inicio}</td>
-                <td>{t.hora_fin}</td>
-                <td className="d-flex gap-2">
-                  <Button size="sm" variant="warning" onClick={() => handleEdit(t)}>
-                    ✏️
-                  </Button>
-                  <Button size="sm" variant="danger" onClick={() => handleDelete(t.id_turno)}>
-                    🗑️
-                  </Button>
+      <div className="table-responsive">
+        <Table striped bordered hover>
+          <thead className="table-primary">
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {turnos.length > 0 ? (
+              turnos.map((t, i) => (
+                <tr key={t.id_turno}>
+                  <td>{i + 1}</td>
+                  <td>{t.nombre_turno}</td>
+                  <td>{t.hora_inicio}</td>
+                  <td>{t.hora_fin}</td>
+                  <td>
+                    <div className="d-flex gap-2 justify-content-center align-items-center bg-transparent">
+                      <Button
+                        size="sm"
+                        variant="warning"
+                        onClick={() => handleEdit(t)}
+                      >
+                        ✏️
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => handleDelete(t.id_turno)}
+                      >
+                        🗑️
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="text-center">
+                  No hay turnos registrados
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="5" className="text-center">
-                No hay turnos registrados
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </Table>
+            )}
+          </tbody>
+        </Table>
+      </div>
 
       {/* Modal Agregar/Editar */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>{editingTurno ? "✏️ Editar Turno" : "➕ Nuevo Turno"}</Modal.Title>
+          <Modal.Title>
+            {editingTurno ? "✏️ Editar Turno" : "➕ Nuevo Turno"}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleSubmit}>
@@ -185,7 +200,12 @@ const TurnosTable = () => {
               />
             </Form.Group>
 
-            <Button type="submit" variant="primary" className="w-100" disabled={loading}>
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-100"
+              disabled={loading}
+            >
               {loading ? "Guardando..." : "Guardar"}
             </Button>
           </Form>

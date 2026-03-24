@@ -125,7 +125,8 @@ export default function GestionSedes() {
       </div>
 
       {/* TABLA */}
-      <table className="table table-striped table-bordered">
+      <div className="table-responsive">
+        <table className="table table-striped table-bordered">
         <thead className="table-primary">
           <tr>
             <th>#</th>
@@ -169,6 +170,7 @@ export default function GestionSedes() {
           )}
         </tbody>
       </table>
+      </div>
 
       {/* MODAL */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>

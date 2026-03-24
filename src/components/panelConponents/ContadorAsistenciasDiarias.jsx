@@ -90,7 +90,7 @@ const ContadorAsistenciasDiarias = () => {
   }
 
   return (
-    <div className="card shadow-sm border-0 text-center">
+    <div className="shadow-sm border-0 h-100 card">
       <div className="card-body">
         <h6 className="text-muted mb-2">Asistencias Hoy</h6>
         <h2
@@ -107,7 +107,7 @@ const ContadorAsistenciasDiarias = () => {
             day: "numeric",
             timeZone: "America/Lima" // ✅ También corregido aquí
           })}
-        </small>
+        </small> <br />
         <button
           className="btn btn-sm btn-outline-success mt-2"
           onClick={obtenerConteoDesdeBackend}

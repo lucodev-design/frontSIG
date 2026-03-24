@@ -81,7 +81,7 @@ const DashboardSuperAdmin = () => {
       >
         {/* Sidebar */}
         <div
-          className={`sidebar d-flex flex-column p-3 ${
+          className={`sidebar d-flex flex-column p-2  ${
             sidebarOpen ? "open" : ""
           }`}
         >

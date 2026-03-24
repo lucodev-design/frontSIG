@@ -71,7 +71,7 @@ const CantidadUsuarios = () => {
   }
 
   return (
-    <div className="card shadow-sm border-0 text-center">
+    <div className="shadow-sm border-0 h-100">
       <div className="card-body">
         <h6 className="text-muted mb-2">Total de Trabajadores</h6>
         <h2 className="text-primary mb-3" style={{ fontSize: '3rem', fontWeight: 'bold' }}>

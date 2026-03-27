@@ -52,3 +52,12 @@
     padding: inherit;
   }
 }
+
+/* PerfilUser */
+.info-box {
+  background: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 15px;
+  border: 1px solid #ddd;
+}

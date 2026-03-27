@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Card, Form, Button, Alert, Spinner } from "react-bootstrap";
 import { enviarSoporte } from "../../api/api";
+import WhatsappButton from "../../components/WhatsappButton";
 
 const SoporteUser = ({ usuario }) => {
   const [mensaje, setMensaje] = useState("");
@@ -62,8 +63,8 @@ const SoporteUser = ({ usuario }) => {
         className="shadow-lg border-0"
         style={{ width: "100%", maxWidth: "500px", borderRadius: "15px" }}
       >
-        <Card.Body className="p-4">
-          <div className="text-center mb-3">
+        <Card.Body className=" soporte-card">
+          <div className="text-center">
             <h4 className="fw-bold">Soporte Técnico</h4>
             <p className="text-muted mb-0">
               ¿Tienes algún problema? Escríbenos y te ayudamos.
@@ -122,6 +123,7 @@ const SoporteUser = ({ usuario }) => {
           </Form>
         </Card.Body>
       </Card>
+      <WhatsappButton phone="51917361031" mensaje="Hola, tengo una consulta." />
     </div>
   );
 };

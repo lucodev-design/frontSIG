@@ -166,17 +166,18 @@ export const loginSuperAdmin = async (correo, contrasena) => {
 
 
 // ===================== ASISTENCIAS =====================
-export const marcarAsistencia = async (qr_code, turno) => {
+// ===================== ASISTENCIAS =====================
+export const marcarAsistencia = async (qr_code) => {
   try {
     const res = await fetch(`${API_URL}/api/auth/asistencia/marcar`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ qr_code, turno }),
+      body: JSON.stringify({ qr_code, turno}),
     });
 
     const data = await res.json();
 
-    // Log para depuración
+    // Debug útil para ver qué responde tu backend
     console.log("📤 [DEBUG] Respuesta del servidor:", data);
 
     if (!res.ok) {

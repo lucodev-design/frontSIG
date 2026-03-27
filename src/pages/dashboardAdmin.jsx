@@ -109,13 +109,13 @@ const DashboardAdmin = () => {
           </Nav>
           {/* componente de boton para cerrar secsion */}
           <LogoutButton />
-          <Button
+          {/* <Button
             variant="outline-light"
             className="mt-auto d-lg-none"
             onClick={() => setSidebarOpen(false)}
           >
             Cerrar menú ✖
-          </Button>
+          </Button> */}
         </div>
 
         {/* Main Content */}

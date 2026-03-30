@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import TurnosTable from "../../components/TurnosTable";
 import ConfigGlobal from "../AdminPages/ConfigGlobal";
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 const ConfiguracionesAdmin = () => {
   const [selectedConfig, setSelectedConfig] = useState(null);
@@ -11,7 +12,7 @@ const ConfiguracionesAdmin = () => {
     <Row className="g-4 justify-content-center">
       <Col xs={12} md={6} lg={5}>
         <Card
-          className="text-center shadow-sm border-0 hover-card"
+          className="text-center shadow-sm border-0 h-100 rounded-3 hover-card"
           onClick={() => setSelectedConfig("general")}
           style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
           onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
@@ -19,7 +20,9 @@ const ConfiguracionesAdmin = () => {
         >
           <Card.Body>
             <div className="mb-3">
-              <span style={{ fontSize: '3rem' }}>⚙️</span>
+              <span style={{ fontSize: '3rem' }}>
+                <i className="bi bi-gear"></i>
+              </span>
             </div>
             <Card.Title className="fw-bold text-primary">
               Configuración General
@@ -33,7 +36,7 @@ const ConfiguracionesAdmin = () => {
 
       <Col xs={12} md={6} lg={5}>
         <Card
-          className="text-center shadow-sm border-0 hover-card"
+          className="text-center shadow-sm border-0 h-100 rounded-3 hover-card"
           onClick={() => setSelectedConfig("turnos")}
           style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
           onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
@@ -41,7 +44,9 @@ const ConfiguracionesAdmin = () => {
         >
           <Card.Body>
             <div className="mb-3">
-              <span style={{ fontSize: '3rem' }}>🧭</span>
+              <span style={{ fontSize: '3rem' }}>
+                <i className="bi bi-clock"></i>
+              </span>
             </div>
             <Card.Title className="fw-bold text-success">
               Configuración de Turnos
@@ -58,7 +63,7 @@ const ConfiguracionesAdmin = () => {
   // 🔹 Render principal
   return (
     <Container className="py-4">
-      <h3 className="text-center mb-4">⚙️ Módulo de Configuraciones</h3>
+      <h3 className="text-center mb-4">Módulo de Configuraciones</h3>
 
       {/* Tarjetas principales */}
       {!selectedConfig && renderTarjetasPrincipales()}

@@ -255,7 +255,7 @@ const DashboardUser = () => {
 
               <Button
                 variant="primary"
-                className="mb-3 w-100 shadow-sm"
+                className="mb-3 w-100 shadow-sm d-none"
                 onClick={handleMarcarAsistencia}
                 disabled={registrando || !usuario?.id_usuario}
               >
@@ -445,4 +445,4 @@ const DashboardUser = () => {
   );
 };
 
-export default DashboardUser;
+export default DashboardUser

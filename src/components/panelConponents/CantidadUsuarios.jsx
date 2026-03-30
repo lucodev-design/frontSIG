@@ -1,6 +1,8 @@
 // CantidadUsuarios.jsx
 import React, { useState, useEffect } from 'react';
 import { getUsers, getSedes } from '../../api/api';
+import "bootstrap-icons/font/bootstrap-icons.css";
+
 
 const CantidadUsuarios = () => {
   const [totalUsuarios, setTotalUsuarios] = useState(0);
@@ -71,7 +73,7 @@ const CantidadUsuarios = () => {
   }
 
   return (
-    <div className="shadow-sm border-0 h-100">
+    <div className="shadow-sm border-0 h-100 bg-white card">
       <div className="card-body">
         <h6 className="text-muted mb-2">Total de Trabajadores</h6>
         <h2 className="text-primary mb-3" style={{ fontSize: '3rem', fontWeight: 'bold' }}>
@@ -84,7 +86,7 @@ const CantidadUsuarios = () => {
             className={`btn btn-sm ${sedeSeleccionada === 'todas' ? 'btn-primary' : 'btn-outline-primary'}`}
             onClick={() => handleSedeClick('todas')}
           >
-            📊 Todas las Sedes
+            <i className='bi bi-bar-chart'></i> Todas las Sedes
           </button>
           
           {sedes.map((sede) => (
@@ -114,7 +116,7 @@ const CantidadUsuarios = () => {
           onClick={cargarDatos}
           title="Actualizar contador"
         >
-          🔄 Actualizar
+          <i className="bi bi-arrow-repeat"></i> Actualizar
         </button>
       </div>
     </div>

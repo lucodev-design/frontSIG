@@ -7,6 +7,7 @@ import LogoutButton from "../components/logout";
 import ContadorAsistenciasDiarias from "../components/panelConponents/ContadorAsistenciasDiarias";
 import CantidadUsuarios from "../components/panelConponents/CantidadUsuarios";
 import "../templates/styles/DashAdmin.css";
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 //  Lazy load de módulos
 const GestionUsuarios = lazy(() => import("../pages/AdminPages/GestionUsuario"));
@@ -109,13 +110,7 @@ const DashboardAdmin = () => {
           </Nav>
           {/* componente de boton para cerrar secsion */}
           <LogoutButton />
-          {/* <Button
-            variant="outline-light"
-            className="mt-auto d-lg-none"
-            onClick={() => setSidebarOpen(false)}
-          >
-            Cerrar menú ✖
-          </Button> */}
+          
         </div>
 
         {/* Main Content */}
@@ -130,7 +125,7 @@ const DashboardAdmin = () => {
               ☰
             </Button>
             <Navbar.Brand>
-              Bienvenido <strong>{nombre}</strong> 👋
+              Bienvenido <strong>{nombre}</strong> <i class="bi bi-person-check"></i>
             </Navbar.Brand>
           </Navbar>
 

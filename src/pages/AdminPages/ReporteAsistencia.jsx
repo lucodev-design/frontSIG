@@ -274,7 +274,7 @@ const ReporteAsistencia = () => {
     <div className="container py-4">
       <Card className="shadow-lg p-4 border-0" style={{ borderRadius: "20px" }}>
         <h3 className="text-center mb-4 fw-bold text-primary">
-          📋 Reporte de Asistencias
+          <i className="bi bi-clipboard-check"></i> Reporte de Asistencias
         </h3>
 
         {/* Selección de usuario */}

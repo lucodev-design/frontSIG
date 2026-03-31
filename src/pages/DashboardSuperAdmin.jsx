@@ -1,36 +1,44 @@
 import React, { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import {  Container,  Row,  Col,  Card,  Button,  Navbar,  Nav,  Spinner,} from "react-bootstrap";
-import {  FaGlobe,  FaUsers,  FaBuilding,  FaCogs,  FaChartLine,  FaAngleDown,  FaAngleUp,  FaUserPlus, FaList,  FaHome, } from "react-icons/fa";
+import {  FaGlobe,  FaUsers,  FaBuilding,  FaCogs,  FaChartLine,  FaAngleDown,  FaAngleUp,  FaUserPlus,  FaList,  FaHome,} from "react-icons/fa";
 import "../templates/styles/DashAdmin.css";
 import LogoutButton from "../components/logout.jsx";
 
 // Lazy loads
-const GestionUsuarios = lazy(() =>
-  import("../pages/AdminPages/GestionUsuario.jsx")
+const GestionUsuarios = lazy(
+  () => import("../pages/AdminPages/GestionUsuario.jsx"),
 );
-const ListUser = lazy(() =>
-  import("../pages/AdminPages/ListUser.jsx")
+
+const ListUser = lazy(
+  () => import("../pages/AdminPages/ListUser.jsx")
 );
-const GestionSedes = lazy(() =>
-  import("../pages/SuperAdminPages/GestionSedesSuperAdmin.jsx")
+
+const GestionSedes = lazy(
+  () => import("../pages/SuperAdminPages/GestionSedesSuperAdmin.jsx"),
 );
-const GestionRoles = lazy(() =>
-  import("../pages/SuperAdminPages/GestionRolesSuperAdmin.jsx")
+
+const GestionRoles = lazy(
+  () => import("../pages/SuperAdminPages/GestionRolesSuperAdmin.jsx"),
 );
-const ConfiguracionGlobal = lazy(() =>
-  import("../pages/SuperAdminPages/SoporteSuperAdmin/SoporteAdmin.jsx")
+
+const ConfiguracionGlobal = lazy(
+  () => import("../pages/SuperAdminPages/SoporteSuperAdmin/SoporteAdmin.jsx"),
 );
-const ReportesGenerales = lazy(() =>
-  import("./SuperAdminPages/ReportesGenerales.jsx")
+
+const ReportesGenerales = lazy(
+  () => import("./SuperAdminPages/ReportesGenerales.jsx"),
 );
 
 // COMPONENTES PARA ADMINISTRADORES
-const CrearAdmin = lazy(() =>
-  import("../pages/SuperAdminPages/CrearAdmin.jsx")
+const CrearAdmin = lazy(
+  () => import("../pages/SuperAdminPages/CrearAdmin.jsx"),
 );
-const ListaAdmins = lazy(() =>
-  import("../pages/SuperAdminPages/ListAdmin.jsx")
+const ListaAdmins = lazy(
+  () => import("../pages/SuperAdminPages/ListAdmin.jsx"),
+);
+const ListGeneral = lazy(
+  ()=> import("../pages/SuperAdminPages/ListGeneral.jsx"),
 );
 
 const AggUsuario = lazy(() => import("../pruebasHooks/AggUsuario"));
@@ -45,6 +53,7 @@ const DashboardSuperAdmin = () => {
 
   // Estado del submenú Gestión
   const [gestionOpen, setGestionOpen] = useState(false);
+  const [gestionPersonalOpen, setGestionPersonalOpen] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -99,24 +108,38 @@ const DashboardSuperAdmin = () => {
             </Nav.Link>
 
             {/* Usuarios o trabajadores */}
-            <Nav.Link
-              className={`text-white mb-2 ${
-                activeView === "usuarios" ? "active" : ""
-              }`}
-              onClick={() => handleSidebarClick("usuarios")}
-            >
-              <FaUsers className="me-2" /> Gestión de Trabajadores
-            </Nav.Link>
+            {/* GESTIÓN DE PERSONAL */}
+            <div>
+              <Nav.Link
+                className={`text-white mb-2 d-flex justify-content-between align-items-center ${gestionPersonalOpen ? "active" : ""}`}
+                onClick={() => setGestionPersonalOpen(!gestionPersonalOpen)}
+                style={{ cursor: "pointer" }}
+              >
+                <span>
+                  <FaUsers className="me-2" /> Administrar
+                </span>
+                {gestionPersonalOpen ? <FaAngleUp /> : <FaAngleDown />}
+              </Nav.Link>
 
-            {/* Gestión de Administradores */}
-            <Nav.Link
-              className={`text-white mb-2 ${
-                activeView === "gestionAdmins" ? "active" : ""
-              }`}
-              onClick={() => handleSidebarClick("gestionAdmins")}
-            >
-              <FaUsers className="me-2" /> Gestión de Administradores
-            </Nav.Link>
+              {/* SUBMENÚ: Trabajadores / Administradores General */}
+              {gestionPersonalOpen && (
+                <div className="ms-4 ">
+                  <Nav.Link
+                    className={`text-white mb-2 ${activeView === "usuarios" ? "active" : ""}`}
+                    onClick={() => handleSidebarClick("usuarios")}
+                  >
+                    • Trabajadores
+                  </Nav.Link>
+
+                  <Nav.Link
+                    className={`text-white mb-2 ${activeView === "gestionAdmins" ? "active" : ""}`}
+                    onClick={() => handleSidebarClick("gestionAdmins")}
+                  >
+                    • General
+                  </Nav.Link>
+                </div>
+              )}
+            </div>
 
             {/* GESTIÓN GENERAL */}
             <div>
@@ -174,7 +197,7 @@ const DashboardSuperAdmin = () => {
               }`}
               onClick={() => handleSidebarClick("config")}
             >
-              <FaCogs className="me-2" /> Configuración Global
+              <FaCogs className="me-2" /> Mensajería
             </Nav.Link>
 
             {/* Reportes */}
@@ -186,19 +209,11 @@ const DashboardSuperAdmin = () => {
             >
               <FaChartLine className="me-2" /> Reportes Generales
             </Nav.Link>
-
-            
           </Nav>
 
           <LogoutButton />
 
-          <Button
-            variant="outline-light"
-            className="mt-auto d-lg-none"
-            onClick={() => setSidebarOpen(false)}
-          >
-            Cerrar menú ✖
-          </Button>
+          
         </div>
 
         {/* CONTENIDO PRINCIPAL */}
@@ -212,11 +227,11 @@ const DashboardSuperAdmin = () => {
               ☰
             </Button>
             <Navbar.Brand>
-              Bienvenido <strong>{nombre}</strong> 
+              Bienvenido <strong>{nombre}</strong>
             </Navbar.Brand>
           </Navbar>
 
-          <Container fluid className="p-4" style={{ background: "#f5f6fa" }}>
+          <Container fluid className="p-4 " style={{ background: "#f5f6fa" }}>
             {/* HOME - Estilo de Tarjetas */}
             {activeView === "home" && (
               <>
@@ -254,7 +269,8 @@ const DashboardSuperAdmin = () => {
                         <FaUsers size={40} className="text-primary mb-3" />
                         <Card.Title>Gestión de Administradores</Card.Title>
                         <Card.Text>
-                          Registrar, editar y ver la lista de administradores del sistema.
+                          Registrar, editar y ver la lista de administradores
+                          del sistema.
                         </Card.Text>
                         <Button
                           variant="primary"
@@ -272,7 +288,8 @@ const DashboardSuperAdmin = () => {
                         <FaBuilding size={40} className="text-success mb-3" />
                         <Card.Title>Gestión de Sedes y Roles</Card.Title>
                         <Card.Text>
-                          Administra las ubicaciones (Sedes) y los cargos (Roles) de la organización.
+                          Administra las ubicaciones (Sedes) y los cargos
+                          (Roles) de la organización.
                         </Card.Text>
                         <Button
                           variant="success"
@@ -293,7 +310,8 @@ const DashboardSuperAdmin = () => {
                         <FaCogs size={40} className="text-warning mb-3" />
                         <Card.Title>Configuración Global</Card.Title>
                         <Card.Text>
-                          Ajustes globales que afectan a todas las sedes y administradores.
+                          Ajustes globales que afectan a todas las sedes y
+                          administradores.
                         </Card.Text>
                         <Button
                           variant="warning"
@@ -353,7 +371,7 @@ const DashboardSuperAdmin = () => {
                     }
                     onClick={() => setActiveAdminView("form")}
                   >
-                    <FaUserPlus className="me-1" /> Registrar Administrador
+                    <FaUserPlus className="me-1" /> Regístro General
                   </Button>
                   <Button
                     variant={
@@ -362,6 +380,14 @@ const DashboardSuperAdmin = () => {
                     onClick={() => setActiveAdminView("list")}
                   >
                     <FaList className="me-1" /> Lista de Administradores
+                  </Button>
+                  <Button
+                    variant={
+                      activeAdminView === "listG" ? "primary" : "outline-primary"
+                    }
+                    onClick={() => setActiveAdminView("listG")}
+                  >
+                    <FaList className="me-1" /> Lista General
                   </Button>
                 </div>
 
@@ -374,41 +400,77 @@ const DashboardSuperAdmin = () => {
                 >
                   {activeAdminView === "form" && <CrearAdmin />}
                   {activeAdminView === "list" && <ListaAdmins />}
+                  {activeAdminView === "listG" && <ListGeneral/>}
                 </Suspense>
               </>
             )}
 
             {/* SEDES */}
             {activeView === "sedes" && (
-              <Suspense fallback={<Spinner animation="border" className="d-block mx-auto mt-5" />}>
+              <Suspense
+                fallback={
+                  <Spinner
+                    animation="border"
+                    className="d-block mx-auto mt-5"
+                  />
+                }
+              >
                 <GestionSedes />
               </Suspense>
             )}
 
             {/* ROLES */}
             {activeView === "roles" && (
-              <Suspense fallback={<Spinner animation="border" className="d-block mx-auto mt-5" />}>
+              <Suspense
+                fallback={
+                  <Spinner
+                    animation="border"
+                    className="d-block mx-auto mt-5"
+                  />
+                }
+              >
                 <GestionRoles />
               </Suspense>
             )}
 
             {/* CONFIG AVANZADAS */}
             {activeView === "configuracionesAdmin" && (
-              <Suspense fallback={<Spinner animation="border" className="d-block mx-auto mt-5" />}>
+              <Suspense
+                fallback={
+                  <Spinner
+                    animation="border"
+                    className="d-block mx-auto mt-5"
+                  />
+                }
+              >
                 <AggUsuario />
               </Suspense>
             )}
 
             {/* CONFIG GLOBAL */}
             {activeView === "config" && (
-              <Suspense fallback={<Spinner animation="border" className="d-block mx-auto mt-5" />}>
+              <Suspense
+                fallback={
+                  <Spinner
+                    animation="border"
+                    className="d-block mx-auto mt-5"
+                  />
+                }
+              >
                 <ConfiguracionGlobal />
               </Suspense>
             )}
 
             {/* REPORTES */}
             {activeView === "reportes" && (
-              <Suspense fallback={<Spinner animation="border" className="d-block mx-auto mt-5" />}>
+              <Suspense
+                fallback={
+                  <Spinner
+                    animation="border"
+                    className="d-block mx-auto mt-5"
+                  />
+                }
+              >
                 <ReportesGenerales />
               </Suspense>
             )}

@@ -12,12 +12,15 @@ export default function ListUser() {
   const [roles, setRoles] = useState([]);
   const [selectedSede, setSelectedSede] = useState("");
 
+  // QR modal
   const [showQR, setShowQR] = useState(false);
   const [qrSelected, setQrSelected] = useState("");
 
+  // Edit modal
   const [showEdit, setShowEdit] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
 
+  // Mensajes
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
@@ -79,14 +82,12 @@ export default function ListUser() {
             ? String(u.rol_id)
             : "",
           qr_code: u.qr_code || u.id_usuario?.toString(),
-          turno: u.turno || u.nombre_turno || "Sin turno",
+          turno: u.turno || u.nombre_turno || "Sin turno", // 👈 NUEVO
         };
       });
 
-      // ✅ Solo empleados con rol_id === "2"
-      const empleados = mapped.filter((u) => String(u.rol_id) === "2");
-      setUsers(empleados);
-      setFilteredUsers(empleados);
+      setUsers(mapped);
+      setFilteredUsers(mapped);
     } catch (err) {
       console.error("❌ Error cargando usuarios:", err);
       showTempMessage("❌ Error cargando usuarios", "danger");
@@ -216,12 +217,13 @@ export default function ListUser() {
     setTimeout(() => setMessage(null), 3000);
   };
 
+  // ✅ NUEVAS COLUMNAS
   const columns = [
     { name: "Nombre", selector: (row) => row.nombre, sortable: true },
     { name: "Apellidos", selector: (row) => row.apellidos, sortable: true },
     { name: "DNI", selector: (row) => row.dni },
     { name: "Correo", selector: (row) => row.email },
-    { name: "Turno", selector: (row) => row.turno || "Sin turno" },
+    { name: "Turno", selector: (row) => row.turno || "Sin turno" }, // 👈 NUEVA COLUMNA
     {
       name: "QR",
       cell: (row) => (
@@ -296,7 +298,7 @@ export default function ListUser() {
         responsive
       />
 
-      {/* QR Modal */}
+      {/* ✅ QR Modal */}
       <Modal show={showQR} onHide={() => setShowQR(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>🔗 Código QR</Modal.Title>
@@ -338,7 +340,10 @@ export default function ListUser() {
                   type="text"
                   value={editingUser.apellidos}
                   onChange={(e) =>
-                    setEditingUser({ ...editingUser, apellidos: e.target.value })
+                    setEditingUser({
+                      ...editingUser,
+                      apellidos: e.target.value,
+                    })
                   }
                 />
               </Form.Group>
@@ -378,3 +383,5 @@ export default function ListUser() {
     </div>
   );
 }
+
+

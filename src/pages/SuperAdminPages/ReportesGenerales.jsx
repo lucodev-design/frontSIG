@@ -1,183 +1,378 @@
-import React, { useEffect, useState } from "react";
-import { Button, Form, Card, Row, Col, Table, Spinner, Alert, Badge } from "react-bootstrap";
-import { 
-  getSedes, 
+import React, { useEffect, useState, useCallback } from "react";
+import {
+  Button,
+  Form,
+  Card,
+  Row,
+  Col,
+  Table,
+  Spinner,
+  Alert,
+  Badge,
+} from "react-bootstrap";
+import {
+  getSedes,
   getUsuariosPorSede,
   generarReporteConsolidado,
   generarReportePorSede,
   generarReportePorTrabajador,
   exportarReporteExcel,
-  exportarReportePDF
+  exportarReportePDF,
 } from "../../api/api.js";
 import { FaFileExcel, FaFilePdf, FaSearch, FaChartLine } from "react-icons/fa";
 
+const FILTROS_INICIAL = {
+  tipoReporte: "consolidado",
+  periodo: "mensual",
+  mes: new Date().getMonth() + 1,
+  anio: new Date().getFullYear(),
+  quincena: "1",
+  sedeSeleccionada: "",
+  trabajadorSeleccionado: "",
+  fechaInicio: "",
+  fechaFin: "",
+};
+
+const MESES = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
+
+// ✅ Calcula estadísticas desde las filas según el tipo de reporte
+const calcularEstadisticasFrontend = (rows, tipoReporte) => {
+  if (!rows || rows.length === 0) return null;
+
+  let total_asistencias = 0;
+  let total_tardanzas = 0;
+  let total_faltas = 0;
+
+  if (tipoReporte === "consolidado") {
+    // Cada fila es una sede con columnas: asistencias, tardanzas, faltas
+    total_asistencias = rows.reduce(
+      (s, r) => s + (parseInt(r.asistencias) || 0),
+      0,
+    );
+    total_tardanzas = rows.reduce(
+      (s, r) => s + (parseInt(r.tardanzas) || 0),
+      0,
+    );
+    total_faltas = rows.reduce((s, r) => s + (parseInt(r.faltas) || 0), 0);
+  } else if (tipoReporte === "sede") {
+    // Cada fila es un trabajador con: dias_presente, dias_tardanza, dias_falta
+    total_asistencias = rows.reduce(
+      (s, r) => s + (parseInt(r.dias_presente) || 0),
+      0,
+    );
+    total_tardanzas = rows.reduce(
+      (s, r) => s + (parseInt(r.dias_tardanza) || 0),
+      0,
+    );
+    total_faltas = rows.reduce((s, r) => s + (parseInt(r.dias_falta) || 0), 0);
+  } else if (tipoReporte === "trabajador") {
+    // Cada fila es un día con columna: estado
+    total_asistencias = rows.filter((r) => r.estado === "Presente").length;
+    total_tardanzas = rows.filter((r) => r.estado === "Tardanza").length;
+    total_faltas = rows.filter((r) => r.estado === "Falta").length;
+  }
+
+  const total = total_asistencias + total_tardanzas + total_faltas;
+  const porcentaje_asistencia =
+    total > 0 ? ((total_asistencias / total) * 100).toFixed(2) : "0.00";
+
+  return {
+    total_asistencias,
+    total_tardanzas,
+    total_faltas,
+    porcentaje_asistencia,
+  };
+};
+
 export default function ReportesGenerales() {
-  // Estados principales
   const [sedes, setSedes] = useState([]);
   const [trabajadores, setTrabajadores] = useState([]);
-  const [loading, setLoading] = useState(false);
+
+  const [loadingCatalogo, setLoadingCatalogo] = useState(false);
+  const [loadingReporte, setLoadingReporte] = useState(false);
+  const [loadingExcel, setLoadingExcel] = useState(false);
+  const [loadingPDF, setLoadingPDF] = useState(false);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Filtros
-  const [tipoReporte, setTipoReporte] = useState("consolidado"); // consolidado | sede | trabajador
-  const [periodo, setPeriodo] = useState("mensual"); // mensual | quincenal | personalizado
-  const [mes, setMes] = useState(new Date().getMonth() + 1);
-  const [anio, setAnio] = useState(new Date().getFullYear());
-  const [quincena, setQuincena] = useState("1");
-  const [sedeSeleccionada, setSedeSeleccionada] = useState("");
-  const [trabajadorSeleccionado, setTrabajadorSeleccionado] = useState("");
-  const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
-
-  // Datos del reporte
+  const [filtros, setFiltros] = useState(FILTROS_INICIAL);
   const [reporteData, setReporteData] = useState([]);
   const [estadisticas, setEstadisticas] = useState(null);
 
-  // Cargar sedes al montar
-  useEffect(() => {
-    cargarSedes();
-  }, []);
+  const setFiltro = (campo, valor) =>
+    setFiltros((prev) => ({ ...prev, [campo]: valor }));
 
-  // Cargar trabajadores cuando cambia la sede
-  useEffect(() => {
-    if (sedeSeleccionada && tipoReporte === "trabajador") {
-      cargarTrabajadores(sedeSeleccionada);
-    }
-  }, [sedeSeleccionada, tipoReporte]);
-
-  // ====================================
-  // FUNCIONES DE CARGA
-  // ====================================
-  const cargarSedes = async () => {
-    const data = await getSedes();
-    setSedes(data);
-  };
-
-  const cargarTrabajadores = async (sedeId) => {
-    const data = await getUsuariosPorSede(sedeId);
-    setTrabajadores(data);
-  };
-
-  // ====================================
-  // GENERAR REPORTE
-  // ====================================
-  const handleGenerarReporte = async () => {
-    // Validaciones
-    if (periodo !== "personalizado" && (!mes || !anio)) {
-      setError("Debe seleccionar mes y año");
-      return;
-    }
-
-    if (periodo === "personalizado" && (!fechaInicio || !fechaFin)) {
-      setError("Debe seleccionar fecha de inicio y fin");
-      return;
-    }
-
-    if (tipoReporte === "sede" && !sedeSeleccionada) {
-      setError("Debe seleccionar una sede");
-      return;
-    }
-
-    if (tipoReporte === "trabajador" && !trabajadorSeleccionado) {
-      setError("Debe seleccionar un trabajador");
-      return;
-    }
-
-    setLoading(true);
+  const handleTipoReporteChange = (valor) => {
+    setFiltros((prev) => ({
+      ...prev,
+      tipoReporte: valor,
+      sedeSeleccionada: "",
+      trabajadorSeleccionado: "",
+    }));
+    setTrabajadores([]);
+    setReporteData([]);
+    setEstadisticas(null);
     setError("");
     setSuccess("");
+  };
+
+  const cargarSedes = useCallback(async () => {
+    setLoadingCatalogo(true);
+    setError("");
+    try {
+      const data = await getSedes();
+      setSedes(data);
+    } catch (err) {
+      setError("No se pudieron cargar las sedes. Intente recargar la página.");
+      console.error("Error cargarSedes:", err);
+    } finally {
+      setLoadingCatalogo(false);
+    }
+  }, []);
+
+  const cargarTrabajadores = useCallback(async (sedeId) => {
+    setLoadingCatalogo(true);
+    setError("");
+    setTrabajadores([]);
+    setFiltro("trabajadorSeleccionado", "");
+    try {
+      const data = await getUsuariosPorSede(sedeId);
+      setTrabajadores(data);
+    } catch (err) {
+      setError(
+        "No se pudieron cargar los trabajadores de la sede seleccionada.",
+      );
+      console.error("Error cargarTrabajadores:", err);
+    } finally {
+      setLoadingCatalogo(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    cargarSedes();
+  }, [cargarSedes]);
+
+  useEffect(() => {
+    if (filtros.sedeSeleccionada && filtros.tipoReporte === "trabajador") {
+      cargarTrabajadores(filtros.sedeSeleccionada);
+    }
+  }, [filtros.sedeSeleccionada, filtros.tipoReporte, cargarTrabajadores]);
+
+  const validar = () => {
+    const {
+      tipoReporte,
+      periodo,
+      mes,
+      anio,
+      fechaInicio,
+      fechaFin,
+      sedeSeleccionada,
+      trabajadorSeleccionado,
+    } = filtros;
+    if (periodo !== "personalizado" && (!mes || !anio))
+      return "Debe seleccionar mes y año.";
+    if (periodo === "personalizado") {
+      if (!fechaInicio || !fechaFin)
+        return "Debe seleccionar fecha de inicio y fin.";
+      if (new Date(fechaInicio) > new Date(fechaFin))
+        return "La fecha de inicio no puede ser mayor a la fecha fin.";
+    }
+    if (tipoReporte === "sede" && !sedeSeleccionada)
+      return "Debe seleccionar una sede.";
+    if (tipoReporte === "trabajador" && !sedeSeleccionada)
+      return "Debe seleccionar una sede.";
+    if (tipoReporte === "trabajador" && !trabajadorSeleccionado)
+      return "Debe seleccionar un trabajador.";
+    return null;
+  };
+
+  const handleGenerarReporte = async () => {
+    const mensajeError = validar();
+    if (mensajeError) {
+      setError(mensajeError);
+      return;
+    }
+
+    setLoadingReporte(true);
+    setError("");
+    setSuccess("");
+    setReporteData([]);
+    setEstadisticas(null);
+
+    const {
+      tipoReporte,
+      mes,
+      anio,
+      periodo,
+      quincena,
+      fechaInicio,
+      fechaFin,
+      sedeSeleccionada,
+      trabajadorSeleccionado,
+    } = filtros;
+    const params = { mes, anio, periodo, quincena, fechaInicio, fechaFin };
 
     try {
-      const params = {
+      let data = null;
+
+      if (tipoReporte === "consolidado") {
+        data = await generarReporteConsolidado(params);
+      } else if (tipoReporte === "sede") {
+        data = await generarReportePorSede({
+          ...params,
+          sedeId: sedeSeleccionada,
+        });
+      } else if (tipoReporte === "trabajador") {
+        data = await generarReportePorTrabajador({
+          ...params,
+          usuarioId: trabajadorSeleccionado,
+        });
+      }
+
+      if (!data || !data.reporte)
+        throw new Error(
+          "La respuesta del servidor no tiene el formato esperado.",
+        );
+
+      const filas = data.reporte;
+      setReporteData(filas);
+
+      // ✅ Siempre calcular desde el frontend para garantizar consistencia
+      const stats = calcularEstadisticasFrontend(filas, tipoReporte);
+      setEstadisticas(stats);
+
+      setSuccess(
+        filas.length > 0
+          ? `Reporte generado exitosamente — ${filas.length} registros encontrados.`
+          : "Reporte generado, pero no se encontraron registros para los filtros seleccionados.",
+      );
+    } catch (err) {
+      setError(
+        err.message || "Error al generar el reporte. Intente nuevamente.",
+      );
+      console.error("Error handleGenerarReporte:", err);
+    } finally {
+      setLoadingReporte(false);
+    }
+  };
+
+  const handleExportarExcel = async () => {
+    if (reporteData.length === 0) {
+      setError("No hay datos para exportar. Genere un reporte primero.");
+      return;
+    }
+    setLoadingExcel(true);
+    setError("");
+    try {
+      const {
+        tipoReporte,
         mes,
         anio,
         periodo,
         quincena,
         fechaInicio,
         fechaFin,
-      };
-
-      let data = null;
-
-      if (tipoReporte === "consolidado") {
-        data = await generarReporteConsolidado(params);
-      } else if (tipoReporte === "sede") {
-        data = await generarReportePorSede({ ...params, sedeId: sedeSeleccionada });
-      } else if (tipoReporte === "trabajador") {
-        data = await generarReportePorTrabajador({ ...params, usuarioId: trabajadorSeleccionado });
-      }
-
-      setReporteData(data.reporte || []);
-      setEstadisticas(data.estadisticas || null);
-      setSuccess("Reporte generado exitosamente");
-    } catch (err) {
-      setError(err.message || "Error al generar reporte");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ====================================
-  // EXPORTAR
-  // ====================================
-  const handleExportarExcel = async () => {
-    if (reporteData.length === 0) {
-      setError("No hay datos para exportar");
-      return;
-    }
-
-    try {
-      setLoading(true);
+        sedeSeleccionada,
+        trabajadorSeleccionado,
+      } = filtros;
       await exportarReporteExcel({
         tipoReporte,
         mes,
         anio,
         periodo,
+        quincena,
+        fechaInicio,
+        fechaFin,
         sedeId: sedeSeleccionada,
         usuarioId: trabajadorSeleccionado,
-        datos: reporteData,
       });
-      setSuccess("Reporte exportado a Excel exitosamente");
+      setSuccess("Reporte exportado a Excel exitosamente.");
     } catch (err) {
-      setError("Error al exportar a Excel");
+      setError("Error al exportar a Excel. Intente nuevamente.");
+      console.error("Error handleExportarExcel:", err);
     } finally {
-      setLoading(false);
+      setLoadingExcel(false);
     }
   };
 
   const handleExportarPDF = async () => {
     if (reporteData.length === 0) {
-      setError("No hay datos para exportar");
+      setError("No hay datos para exportar. Genere un reporte primero.");
       return;
     }
-
+    setLoadingPDF(true);
+    setError("");
     try {
-      setLoading(true);
+      const {
+        tipoReporte,
+        mes,
+        anio,
+        periodo,
+        quincena,
+        fechaInicio,
+        fechaFin,
+        sedeSeleccionada,
+        trabajadorSeleccionado,
+      } = filtros;
       await exportarReportePDF({
         tipoReporte,
         mes,
         anio,
         periodo,
+        quincena,
+        fechaInicio,
+        fechaFin,
         sedeId: sedeSeleccionada,
         usuarioId: trabajadorSeleccionado,
-        datos: reporteData,
       });
-      setSuccess("Reporte exportado a PDF exitosamente");
+      setSuccess("Reporte exportado a PDF exitosamente.");
     } catch (err) {
-      setError("Error al exportar a PDF");
+      setError("Error al exportar a PDF. Intente nuevamente.");
+      console.error("Error handleExportarPDF:", err);
     } finally {
-      setLoading(false);
+      setLoadingPDF(false);
     }
   };
 
-  // ====================================
-  // RENDERIZADO
-  // ====================================
-  const meses = [
-    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-  ];
+  const {
+    tipoReporte,
+    periodo,
+    mes,
+    anio,
+    quincena,
+    sedeSeleccionada,
+    trabajadorSeleccionado,
+    fechaInicio,
+    fechaFin,
+  } = filtros;
+
+  const hayAccionEnCurso = loadingReporte || loadingExcel || loadingPDF;
+
+  // ✅ Labels de tarjetas según tipo de reporte
+  const labelAsistencias =
+    tipoReporte === "consolidado"
+      ? "Total Asistencias"
+      : tipoReporte === "sede"
+        ? "Días Presentes"
+        : "Días Presente";
+  const labelTardanzas =
+    tipoReporte === "consolidado" ? "Total Tardanzas" : "Días Tardanza";
+  const labelFaltas =
+    tipoReporte === "consolidado" ? "Total Faltas" : "Días Falta";
 
   return (
     <div className="p-4">
@@ -186,7 +381,6 @@ export default function ReportesGenerales() {
         Reportes Generales de Asistencia
       </h3>
 
-      {/* ALERTAS */}
       {error && (
         <Alert variant="danger" dismissible onClose={() => setError("")}>
           {error}
@@ -205,76 +399,79 @@ export default function ReportesGenerales() {
         </Card.Header>
         <Card.Body>
           <Row className="mb-3">
-            {/* Tipo de Reporte */}
             <Col md={4}>
               <Form.Label>Tipo de Reporte</Form.Label>
               <Form.Select
                 value={tipoReporte}
-                onChange={(e) => {
-                  setTipoReporte(e.target.value);
-                  setReporteData([]);
-                  setEstadisticas(null);
-                }}
+                onChange={(e) => handleTipoReporteChange(e.target.value)}
+                disabled={loadingReporte}
               >
-                <option value="consolidado">Consolidado General (Todas las Sedes)</option>
+                <option value="consolidado">
+                  Consolidado General (Todas las Sedes)
+                </option>
                 <option value="sede">Por Sede Específica</option>
                 <option value="trabajador">Por Trabajador</option>
               </Form.Select>
             </Col>
-
-            {/* Período */}
             <Col md={4}>
               <Form.Label>Período</Form.Label>
               <Form.Select
                 value={periodo}
-                onChange={(e) => setPeriodo(e.target.value)}
+                onChange={(e) => setFiltro("periodo", e.target.value)}
+                disabled={loadingReporte}
               >
                 <option value="mensual">Mensual</option>
                 <option value="quincenal">Quincenal</option>
-                <option value="personalizado">Personalizado (Rango de Fechas)</option>
+                <option value="personalizado">
+                  Personalizado (Rango de Fechas)
+                </option>
               </Form.Select>
             </Col>
-
-            {/* Mes (si no es personalizado) */}
             {periodo !== "personalizado" && (
               <Col md={2}>
                 <Form.Label>Mes</Form.Label>
-                <Form.Select value={mes} onChange={(e) => setMes(e.target.value)}>
-                  {meses.map((m, idx) => (
-                    <option key={idx} value={idx + 1}>{m}</option>
+                <Form.Select
+                  value={mes}
+                  onChange={(e) => setFiltro("mes", Number(e.target.value))}
+                  disabled={loadingReporte}
+                >
+                  {MESES.map((m, idx) => (
+                    <option key={idx} value={idx + 1}>
+                      {m}
+                    </option>
                   ))}
                 </Form.Select>
               </Col>
             )}
-
-            {/* Año (si no es personalizado) */}
             {periodo !== "personalizado" && (
               <Col md={2}>
                 <Form.Label>Año</Form.Label>
                 <Form.Control
                   type="number"
                   value={anio}
-                  onChange={(e) => setAnio(e.target.value)}
+                  onChange={(e) => setFiltro("anio", Number(e.target.value))}
                   min="2020"
                   max="2099"
+                  disabled={loadingReporte}
                 />
               </Col>
             )}
           </Row>
 
           <Row className="mb-3">
-            {/* Quincena (solo si es quincenal) */}
             {periodo === "quincenal" && (
               <Col md={3}>
                 <Form.Label>Quincena</Form.Label>
-                <Form.Select value={quincena} onChange={(e) => setQuincena(e.target.value)}>
+                <Form.Select
+                  value={quincena}
+                  onChange={(e) => setFiltro("quincena", e.target.value)}
+                  disabled={loadingReporte}
+                >
                   <option value="1">1ra Quincena (1-15)</option>
                   <option value="2">2da Quincena (16-fin)</option>
                 </Form.Select>
               </Col>
             )}
-
-            {/* Fecha Inicio/Fin (solo si es personalizado) */}
             {periodo === "personalizado" && (
               <>
                 <Col md={3}>
@@ -282,7 +479,8 @@ export default function ReportesGenerales() {
                   <Form.Control
                     type="date"
                     value={fechaInicio}
-                    onChange={(e) => setFechaInicio(e.target.value)}
+                    onChange={(e) => setFiltro("fechaInicio", e.target.value)}
+                    disabled={loadingReporte}
                   />
                 </Col>
                 <Col md={3}>
@@ -290,21 +488,28 @@ export default function ReportesGenerales() {
                   <Form.Control
                     type="date"
                     value={fechaFin}
-                    onChange={(e) => setFechaFin(e.target.value)}
+                    min={fechaInicio}
+                    onChange={(e) => setFiltro("fechaFin", e.target.value)}
+                    disabled={loadingReporte}
                   />
                 </Col>
               </>
             )}
-
-            {/* Sede (si es por sede o trabajador) */}
             {(tipoReporte === "sede" || tipoReporte === "trabajador") && (
               <Col md={tipoReporte === "trabajador" ? 4 : 6}>
                 <Form.Label>Sede</Form.Label>
                 <Form.Select
                   value={sedeSeleccionada}
-                  onChange={(e) => setSedeSeleccionada(e.target.value)}
+                  onChange={(e) =>
+                    setFiltro("sedeSeleccionada", e.target.value)
+                  }
+                  disabled={loadingReporte || loadingCatalogo}
                 >
-                  <option value="">Seleccione una sede</option>
+                  <option value="">
+                    {loadingCatalogo
+                      ? "Cargando sedes..."
+                      : "Seleccione una sede"}
+                  </option>
                   {sedes.map((sede) => (
                     <option key={sede.id_sede} value={sede.id_sede}>
                       {sede.nombre}
@@ -313,22 +518,28 @@ export default function ReportesGenerales() {
                 </Form.Select>
               </Col>
             )}
-
-            {/* Trabajador (solo si es por trabajador) */}
             {tipoReporte === "trabajador" && (
               <Col md={4}>
                 <Form.Label>Trabajador</Form.Label>
                 <Form.Select
                   value={trabajadorSeleccionado}
-                  onChange={(e) => setTrabajadorSeleccionado(e.target.value)}
-                  disabled={!sedeSeleccionada}
+                  onChange={(e) =>
+                    setFiltro("trabajadorSeleccionado", e.target.value)
+                  }
+                  disabled={
+                    !sedeSeleccionada || loadingReporte || loadingCatalogo
+                  }
                 >
                   <option value="">
-                    {sedeSeleccionada ? "Seleccione un trabajador" : "Primero seleccione una sede"}
+                    {loadingCatalogo
+                      ? "Cargando trabajadores..."
+                      : sedeSeleccionada
+                        ? "Seleccione un trabajador"
+                        : "Primero seleccione una sede"}
                   </option>
-                  {trabajadores.map((trabajador) => (
-                    <option key={trabajador.id_usuario} value={trabajador.id_usuario}>
-                      {trabajador.nombre} {trabajador.apellidos}
+                  {trabajadores.map((t) => (
+                    <option key={t.id_usuario} value={t.id_usuario}>
+                      {t.nombre} {t.apellidos}
                     </option>
                   ))}
                 </Form.Select>
@@ -336,84 +547,119 @@ export default function ReportesGenerales() {
             )}
           </Row>
 
-          {/* BOTONES DE ACCIÓN */}
           <Row>
             <Col>
               <Button
                 variant="primary"
                 className="me-2"
                 onClick={handleGenerarReporte}
-                disabled={loading}
+                disabled={hayAccionEnCurso || loadingCatalogo}
               >
-                <FaSearch className="me-1" />
-                {loading ? <Spinner size="sm" className="me-1" /> : null}
-                Generar Reporte
+                {loadingReporte ? (
+                  <>
+                    <Spinner size="sm" className="me-1" />
+                    Generando...
+                  </>
+                ) : (
+                  <>
+                    <FaSearch className="me-1" />
+                    Generar Reporte
+                  </>
+                )}
               </Button>
-
               <Button
                 variant="success"
                 className="me-2"
                 onClick={handleExportarExcel}
-                disabled={loading || reporteData.length === 0}
+                disabled={hayAccionEnCurso || reporteData.length === 0}
               >
-                <FaFileExcel className="me-1" />
-                Exportar Excel
+                {loadingExcel ? (
+                  <>
+                    <Spinner size="sm" className="me-1" />
+                    Exportando...
+                  </>
+                ) : (
+                  <>
+                    <FaFileExcel className="me-1" />
+                    Exportar Excel
+                  </>
+                )}
               </Button>
-
               <Button
                 variant="danger"
                 onClick={handleExportarPDF}
-                disabled={loading || reporteData.length === 0}
+                disabled={hayAccionEnCurso || reporteData.length === 0}
               >
-                <FaFilePdf className="me-1" />
-                Exportar PDF
+                {loadingPDF ? (
+                  <>
+                    <Spinner size="sm" className="me-1" />
+                    Exportando...
+                  </>
+                ) : (
+                  <>
+                    <FaFilePdf className="me-1" />
+                    Exportar PDF
+                  </>
+                )}
               </Button>
             </Col>
           </Row>
         </Card.Body>
       </Card>
 
-      {/* ESTADÍSTICAS RESUMEN */}
+      {/* ✅ TARJETAS DE ESTADÍSTICAS */}
       {estadisticas && (
         <Row className="mb-4">
-          <Col md={3}>
-            <Card className="text-center shadow-sm">
-              <Card.Body>
-                <h6 className="text-muted">Total Asistencias</h6>
-                <h3 className="text-success">{estadisticas.total_asistencias}</h3>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={3}>
-            <Card className="text-center shadow-sm">
-              <Card.Body>
-                <h6 className="text-muted">Total Tardanzas</h6>
-                <h3 className="text-warning">{estadisticas.total_tardanzas}</h3>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={3}>
-            <Card className="text-center shadow-sm">
-              <Card.Body>
-                <h6 className="text-muted">Total Faltas</h6>
-                <h3 className="text-danger">{estadisticas.total_faltas}</h3>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={3}>
-            <Card className="text-center shadow-sm">
-              <Card.Body>
-                <h6 className="text-muted">% Asistencia</h6>
-                <h3 className="text-primary">{estadisticas.porcentaje_asistencia}%</h3>
-              </Card.Body>
-            </Card>
-          </Col>
+          {[
+            {
+              label: labelAsistencias,
+              value: estadisticas.total_asistencias,
+              color: "text-success",
+              border: "border-success",
+            },
+            {
+              label: labelTardanzas,
+              value: estadisticas.total_tardanzas,
+              color: "text-warning",
+              border: "border-warning",
+            },
+            {
+              label: labelFaltas,
+              value: estadisticas.total_faltas,
+              color: "text-danger",
+              border: "border-danger",
+            },
+            {
+              label: "% Asistencia",
+              value: `${estadisticas.porcentaje_asistencia}%`,
+              color:
+                parseFloat(estadisticas.porcentaje_asistencia) >= 80
+                  ? "text-success"
+                  : "text-danger",
+              border:
+                parseFloat(estadisticas.porcentaje_asistencia) >= 80
+                  ? "border-success"
+                  : "border-danger",
+            },
+          ].map(({ label, value, color, border }) => (
+            <Col md={3} key={label}>
+              <Card
+                className={`text-center shadow-sm ${border}`}
+                style={{ borderWidth: "2px" }}
+              >
+                <Card.Body>
+                  <h6 className="text-muted mb-1">{label}</h6>
+                  <h2 className={`fw-bold ${color}`}>{value}</h2>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
         </Row>
       )}
 
       {/* TABLA DE RESULTADOS */}
       <Card className="shadow-sm">
-        <Card.Header className="bg-light">
+        <Card.Header className="bg-light d-flex align-items-center">
           <strong>Resultados del Reporte</strong>
           {reporteData.length > 0 && (
             <Badge bg="info" className="ms-2">
@@ -422,15 +668,18 @@ export default function ReportesGenerales() {
           )}
         </Card.Header>
         <Card.Body>
-          {loading ? (
+          {loadingReporte ? (
             <div className="text-center py-5">
               <Spinner animation="border" variant="primary" />
-              <p className="mt-3">Generando reporte...</p>
+              <p className="mt-3 text-muted">Generando reporte...</p>
             </div>
           ) : reporteData.length === 0 ? (
             <div className="text-center text-muted py-5">
               <FaChartLine size={50} className="mb-3 opacity-25" />
-              <p>No hay datos para mostrar. Genere un reporte para ver los resultados.</p>
+              <p>
+                No hay datos para mostrar. Genere un reporte para ver los
+                resultados.
+              </p>
             </div>
           ) : (
             <div className="table-responsive">
@@ -446,7 +695,11 @@ export default function ReportesGenerales() {
                   {reporteData.map((row, idx) => (
                     <tr key={idx}>
                       {Object.values(row).map((val, i) => (
-                        <td key={i}>{val !== null && val !== undefined ? val : "-"}</td>
+                        <td key={i}>
+                          {val !== null && val !== undefined
+                            ? String(val)
+                            : "—"}
+                        </td>
                       ))}
                     </tr>
                   ))}

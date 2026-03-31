@@ -450,7 +450,6 @@ export const getEstadisticasGenerales = async () => {
 
 
 // ===============================================
-// src/api/api.js
 
 // Obtener el último reporte generado de un usuario
 export const getUltimoReporteUsuario = async (id_usuario) => {
@@ -516,12 +515,14 @@ export const getReportesUsuario = async (id_usuario, limite = 10) => {
 //   }
 // };
 
+
 // ====================================
 // OBTENER USUARIOS POR SEDE
 // ====================================
 export const getUsuariosPorSede = async (sedeId) => {
   try {
     const token = localStorage.getItem("token");
+    // ✅ CORREGIDO: /api/usuarios/sede/:sedeId (ruta nueva creada en usuariosSede.routes.js)
     const response = await fetch(`${API_URL}/api/usuarios/sede/${sedeId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -537,13 +538,14 @@ export const getUsuariosPorSede = async (sedeId) => {
 };
 
 // ====================================
-// GENERAR REPORTE CONSOLIDADO (TODAS LAS SEDES)
+// GENERAR REPORTE CONSOLIDADO
 // ====================================
 export const generarReporteConsolidado = async (params) => {
   try {
     const token = localStorage.getItem("token");
     const query = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_URL}/api/reportes/consolidado?${query}`, {
+    // ✅ CORREGIDO: /api/reportes-generales/consolidado
+    const response = await fetch(`${API_URL}/api/reportes-generales/consolidado?${query}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -551,7 +553,7 @@ export const generarReporteConsolidado = async (params) => {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Error al generar reporte");
+      throw new Error(errorData.message || "Error al generar reporte consolidado");
     }
     return await response.json();
   } catch (error) {
@@ -567,7 +569,8 @@ export const generarReportePorSede = async (params) => {
   try {
     const token = localStorage.getItem("token");
     const query = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_URL}/api/reportes/por-sede?${query}`, {
+    // ✅ CORREGIDO: /api/reportes-generales/por-sede
+    const response = await fetch(`${API_URL}/api/reportes-generales/por-sede?${query}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -575,7 +578,7 @@ export const generarReportePorSede = async (params) => {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Error al generar reporte");
+      throw new Error(errorData.message || "Error al generar reporte por sede");
     }
     return await response.json();
   } catch (error) {
@@ -591,7 +594,8 @@ export const generarReportePorTrabajador = async (params) => {
   try {
     const token = localStorage.getItem("token");
     const query = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_URL}/api/reportes/por-trabajador?${query}`, {
+    // ✅ CORREGIDO: /api/reportes-generales/por-trabajador
+    const response = await fetch(`${API_URL}/api/reportes-generales/por-trabajador?${query}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -599,7 +603,7 @@ export const generarReportePorTrabajador = async (params) => {
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Error al generar reporte");
+      throw new Error(errorData.message || "Error al generar reporte por trabajador");
     }
     return await response.json();
   } catch (error) {
@@ -614,7 +618,8 @@ export const generarReportePorTrabajador = async (params) => {
 export const exportarReporteExcel = async (data) => {
   try {
     const token = localStorage.getItem("token");
-    const response = await fetch(`${API_URL}/api/reportes/exportar/excel`, {
+    // ✅ CORREGIDO: /api/reportes-generales/exportar/excel
+    const response = await fetch(`${API_URL}/api/reportes-generales/exportar/excel`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -625,12 +630,11 @@ export const exportarReporteExcel = async (data) => {
 
     if (!response.ok) throw new Error("Error al exportar a Excel");
 
-    // Descargar el archivo
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `reporte_${new Date().toISOString().split('T')[0]}.xlsx`;
+    a.download = `reporte_${new Date().toISOString().split("T")[0]}.xlsx`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
@@ -647,7 +651,8 @@ export const exportarReporteExcel = async (data) => {
 export const exportarReportePDF = async (data) => {
   try {
     const token = localStorage.getItem("token");
-    const response = await fetch(`${API_URL}/api/reportes/exportar/pdf`, {
+    // ✅ CORREGIDO: /api/reportes-generales/exportar/pdf
+    const response = await fetch(`${API_URL}/api/reportes-generales/exportar/pdf`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -658,12 +663,11 @@ export const exportarReportePDF = async (data) => {
 
     if (!response.ok) throw new Error("Error al exportar a PDF");
 
-    // Descargar el archivo
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `reporte_${new Date().toISOString().split('T')[0]}.pdf`;
+    a.download = `reporte_${new Date().toISOString().split("T")[0]}.pdf`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
@@ -673,6 +677,7 @@ export const exportarReportePDF = async (data) => {
     throw error;
   }
 };
+
 
 // ====== SOPORTE ======
 export const enviarSoporte = async (data) => {

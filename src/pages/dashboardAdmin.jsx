@@ -125,7 +125,7 @@ const DashboardAdmin = () => {
               ☰
             </Button>
             <Navbar.Brand>
-              Bienvenido <strong>{nombre}</strong> <i class="bi bi-person-check"></i>
+              Bienvenido <strong>{nombre}</strong> <i className="bi bi-person-check"></i>
             </Navbar.Brand>
           </Navbar>
 

@@ -63,7 +63,7 @@ const ConfiguracionesAdmin = () => {
   // 🔹 Render principal
   return (
     <Container className="py-4">
-      <h3 className="text-center mb-4">Módulo de Configuraciones</h3>
+      <h3 className="text-center mb-4"> <i className="bi bi-gear-wide-connected"></i>Módulo de Configuraciones</h3>
 
       {/* Tarjetas principales */}
       {!selectedConfig && renderTarjetasPrincipales()}

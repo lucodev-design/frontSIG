@@ -733,3 +733,155 @@ export const deleteSoporte = async (id) => {
     return { success: false, error: mensaje };
   }
 };
+
+// Remuneraciones de trabajadores
+export const updateUserRemuneracion = async (id_usuario, remuneracion) => {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_URL}/api/usuarios/${id_usuario}/remuneracion`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+    body: JSON.stringify({ remuneracion }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Error al actualizar remuneración");
+  }
+
+  return await res.json();
+};
+
+// ====================================
+// TICKETS DE REMUNERACIÓN
+// Agrega estas funciones al final de tu api.js
+// ====================================
+
+export const generarTicket = async (id_usuario) => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/api/tickets/generar/${id_usuario}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Error al generar ticket");
+  }
+  return res.json();
+};
+
+export const getMisTickets = async (id_usuario) => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/api/tickets/mis-tickets/${id_usuario}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Error al obtener tickets");
+  return res.json();
+};
+
+export const enviarTicket = async (id_ticket) => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/api/tickets/enviar/${id_ticket}`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Error al enviar ticket");
+  }
+  return res.json();
+};
+
+export const getTicketsAdmin = async () => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/api/tickets/admin/todos`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Error al obtener tickets");
+  return res.json();
+};
+
+export const contarTicketsNuevos = async () => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/api/tickets/admin/nuevos/count`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Error al contar tickets");
+  return res.json();
+};
+
+export const marcarTicketsVistos = async () => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/api/tickets/admin/vistos`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Error al marcar vistos");
+  return res.json();
+};
+
+export const actualizarEstadoTicket = async (id_ticket, estado) => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/api/tickets/admin/estado/${id_ticket}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ estado }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Error al actualizar estado");
+  }
+  return res.json();
+};
+
+// Traemos las remuneraciones del trabajador
+export const getUsuarioById = async (id_usuario) => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/api/usuarios/${id_usuario}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Error al obtener usuario");
+  return res.json();
+};
+
+// eliminacion de tickets por lado del usario y del administrador
+// Eliminar ticket (usuario — solo pendiente o enviado)
+export const eliminarTicketUsuario = async (id_ticket, id_usuario) => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/api/tickets/eliminar/${id_ticket}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ id_usuario }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Error al eliminar ticket");
+  }
+  return res.json();
+};
+
+// Eliminar ticket (admin — cualquier estado)
+export const eliminarTicketAdmin = async (id_ticket) => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/api/tickets/admin/eliminar/${id_ticket}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Error al eliminar ticket");
+  }
+  return res.json();
+};

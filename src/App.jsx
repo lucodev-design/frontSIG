@@ -23,6 +23,9 @@ import Asistencias from "./pages/Asistencias";
 // Access Selector
 import AccessSelector from "./components/AccessSelector";
 
+// 
+// import ListaTrabajadores from "./pages/AdminPages/pass/ListaTrabajadores";
+
 import "./App.css";
 
 function App() {
@@ -49,6 +52,9 @@ function App() {
 
         {/* Crear Admin */}
         <Route path="/CrearAdmin" element={<CrearAdmin />} />
+
+        {/*  */}
+        {/* <Route path="/admin/trabajadores" element={<ListaTrabajadores />} /> */}
 
         {/* Dashboard SuperAdmin */}
         <Route

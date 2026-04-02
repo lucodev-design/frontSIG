@@ -65,7 +65,9 @@ const ConfigGlobal = ({ onVolver }) => {
       <Card className="shadow-lg p-4 border-0">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h3 className="fw-bold text-primary">Configuración Global</h3>
-          <Button variant="secondary" onClick={onVolver}>← Volver</Button>
+          <Button variant="secondary" onClick={onVolver}>
+            <i className="bi bi-arrow-left-square"></i> volver
+            </Button>
         </div>
 
         {message && <Alert variant="success">{message}</Alert>}

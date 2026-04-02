@@ -22,7 +22,7 @@ const ContadorAsistenciasDiarias = () => {
 
       if (response && typeof response.total === "number") {
         setContadorHoy(response.total);
-        console.log(`✅ Conteo obtenido del backend: ${response.total}`);
+        console.log(` Conteo obtenido del backend: ${response.total}`);
       }
       setLoading(false);
     } catch (error) {
@@ -113,7 +113,7 @@ const ContadorAsistenciasDiarias = () => {
           onClick={obtenerConteoDesdeBackend}
           title="Actualizar conteo"
         >
-          🔄 Actualizar
+          <i className="bi bi-arrow-repeat"></i> Actualizar
         </button>
       </div>
     </div>

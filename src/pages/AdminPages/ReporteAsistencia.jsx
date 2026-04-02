@@ -305,7 +305,7 @@ const ReporteAsistencia = () => {
           <div className="d-flex justify-content-between align-items-center mb-3">
             <div>
               <h5 className="text-muted mb-1">
-                Trabajador:{" "}
+                <i className="bi bi-person-fill"></i>:{" "}
                 <span className="fw-bold text-dark">
                   {usuarios.find((u) => u.id_usuario == selectedUser)?.nombre}{" "}
                   {
@@ -315,14 +315,14 @@ const ReporteAsistencia = () => {
                 </span>
               </h5>
               <p className="text-muted mb-0">
-                Turno:{" "}
+                <i className="bi bi-person-rolodex"></i>:{" "}
                 <span className="fw-semibold text-dark">
                   {turnoUsuario}
                 </span>
               </p>
             </div>
             <Button variant="primary" size="sm" onClick={() => setShowModal(true)}>
-              📤 Exportar
+              <i className="bi bi-box-arrow-in-up"></i> Exportar
             </Button>
           </div>
         )}
@@ -332,7 +332,7 @@ const ReporteAsistencia = () => {
           <Alert variant="success" className="mb-3">
             <div className="d-flex justify-content-between align-items-start">
               <div>
-                <h6 className="fw-bold mb-2">✅ Último Reporte Generado</h6>
+                <h6 className="fw-bold mb-2"><i className="bi bi-check-square"></i> Último Reporte Generado</h6>
                 <p className="mb-1 small">
                   <strong>Tipo:</strong>{" "}
                   <span className={ultimoReporte.tipo_reporte === "PDF" ? "text-danger" : "text-success"}>
@@ -380,7 +380,7 @@ const ReporteAsistencia = () => {
       {/* Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>📤 Exportar Reporte</Modal.Title>
+          <Modal.Title> <i className="bi bi-box-arrow-in-up"></i> Exportar Reporte</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -406,7 +406,7 @@ const ReporteAsistencia = () => {
           {ultimoReporte && (
             <div className="mt-3 p-3 bg-light rounded border">
               <h6 className="fw-bold text-success mb-2">
-                📊 Último reporte guardado
+                <i className="bi bi-bar-chart-line"></i> Último reporte guardado
               </h6>
               <div className="small">
                 <p className="mb-1">
@@ -434,14 +434,14 @@ const ReporteAsistencia = () => {
             onClick={exportarExcel}
             disabled={!fechaInicio || !fechaFin}
           >
-            📗 Excel
+            <i className="bi bi-filetype-exe"></i> Excel
           </Button>
           <Button
             variant="danger"
             onClick={exportarPDF}
             disabled={!fechaInicio || !fechaFin}
           >
-            📄 PDF
+            <i className="bi bi-filetype-pdf"></i> PDF
           </Button>
         </Modal.Footer>
       </Modal>

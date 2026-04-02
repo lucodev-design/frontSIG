@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import {  getUsers,  deleteUser,  getSedes,  getRoles,  updateUser,} from "../../api/api";
 import { Button, Modal, Form, Alert } from "react-bootstrap";
+import "bootstrap-icons/font/bootstrap-icons";
 
 export default function ListUser() {
   const [users, setUsers] = useState([]);
@@ -83,7 +84,7 @@ export default function ListUser() {
         };
       });
 
-      // ✅ Solo empleados con rol_id === "2"
+      //  Solo empleados con rol_id === "2"
       const empleados = mapped.filter((u) => String(u.rol_id) === "2");
       setUsers(empleados);
       setFilteredUsers(empleados);
@@ -243,15 +244,17 @@ export default function ListUser() {
       name: "Acciones",
       cell: (row) => (
         <div className="d-flex gap-2">
-          <Button variant="warning" size="sm" onClick={() => handleEdit(row)}>
-            ✏️
+          <Button 
+          variant="warning" 
+          size="sm" onClick={() => handleEdit(row)}>
+            <i className="bi bi-pencil-square"></i>
           </Button>
           <Button
             variant="danger"
             size="sm"
             onClick={() => handleDelete(row.id_usuario)}
           >
-            🗑️
+            <i className="bi bi-trash3"></i>
           </Button>
         </div>
       ),
@@ -260,7 +263,7 @@ export default function ListUser() {
 
   return (
     <div className="container mt-4 bg-white p-3 rounded shadow-sm">
-      <h2 className="mb-3">📋 Lista de Trabajadores</h2>
+      <h2 className="mb-3"> <i className="bi bi-card-checklist"></i> Lista de Trabajadores</h2>
 
       {message && <Alert variant={message.type}>{message.text}</Alert>}
 
@@ -299,7 +302,7 @@ export default function ListUser() {
       {/* QR Modal */}
       <Modal show={showQR} onHide={() => setShowQR(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>🔗 Código QR</Modal.Title>
+          <Modal.Title> <i className="bi bi-aspect-ratio"></i> Código QR</Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center">
           {qrSelected ? (
@@ -316,7 +319,7 @@ export default function ListUser() {
       {/* Edit Modal */}
       <Modal show={showEdit} onHide={() => setShowEdit(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>✏️ Editar Usuario</Modal.Title>
+          <Modal.Title> <i className="bi bi-pencil-square"></i> Editar Usuario</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {editingUser && (
@@ -371,7 +374,7 @@ export default function ListUser() {
             Cancelar
           </Button>
           <Button variant="primary" onClick={handleUpdate}>
-            💾 Guardar cambios
+            <i className="bi bi-bookmark-check-fill"></i> Guardar cambios
           </Button>
         </Modal.Footer>
       </Modal>

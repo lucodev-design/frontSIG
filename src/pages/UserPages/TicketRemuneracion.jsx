@@ -304,7 +304,7 @@ const TicketRemuneracion = ({ usuario }) => {
       )}
 
       {/* ── Historial de tickets ── */}
-      <Card className="shadow-sm border-0 rounded-3">
+      <Card className="shadow-sm border-0 rounded-3 p-1 ">
         <Card.Header className="bg-white border-bottom d-flex justify-content-between align-items-center">
           <strong>Historial de Tickets</strong>
           <Badge bg="secondary">{tickets.length}</Badge>

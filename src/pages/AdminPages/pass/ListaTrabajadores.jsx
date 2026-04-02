@@ -102,7 +102,7 @@ const ListaTrabajadores = () => {
   return (
     <Card className="shadow p-3 mt-3">
       <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h4 className="mb-0">Lista de Trabajadores</h4>
+        <h4 className="mb-0"> <i className="bi bi-card-checklist"></i> Lista de Trabajadores</h4>
         <Badge bg="secondary">{trabajadores.length} registros</Badge>
       </div>
 

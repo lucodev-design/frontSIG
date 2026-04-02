@@ -83,7 +83,7 @@ const ConfiguracionesAdmin = () => {
             className="mb-3"
             onClick={() => setSelectedConfig(null)}
           >
-            ← Volver
+            <i className="bi bi-arrow-left-square"></i> volver
           </Button>
           <TurnosTable />
         </>

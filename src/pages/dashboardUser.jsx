@@ -169,11 +169,14 @@ const DashboardUser = () => {
               <FaUser size={36} className="text-primary mb-3" />
               <Card.Title className="text-primary">Mi Perfil</Card.Title>
               <Card.Text style={{ whiteSpace: "pre-line" }}>
-                <strong>Nombre:</strong> {primerNombre} {primerApellido}
+                <i className="bi bi-person-fill"></i>
+                <strong> : </strong>{primerNombre} {primerApellido}
                 {"\n"}
-                <strong>Correo:</strong> {usuario?.email}
+                <i className="bi bi-envelope-at-fill"></i>
+                <strong> : </strong>  {usuario?.email}
                 {"\n"}
-                <strong>Rol:</strong> {usuario?.rol || "Trabajador"}
+                <i className="bi bi-person-vcard-fill"></i>
+                <strong> : </strong>{usuario?.rol || "Trabajador"}
               </Card.Text>
               <Button
                 variant="outline-primary"
@@ -229,7 +232,7 @@ const DashboardUser = () => {
         </Col>
 
         <Col xs={12} md={6}>
-          <Card className="shadow-sm border-0 h-100 rounded-3">
+          <Card className="shadow-sm border-0 h-100 rounded-3 p-1">
             <Card.Body>
               <div className="d-flex align-items-center mb-3">
                 <FaClock size={32} className="text-success me-2" />
@@ -422,12 +425,12 @@ const DashboardUser = () => {
             >
               <FaUser className="me-2" /> Perfil
             </Nav.Link>
-            {/* ✅ Nueva entrada Ticket */}
+            {/*  Nueva entrada Ticket */}
             <Nav.Link
               className="text-white mb-2"
               onClick={() => handleSidebarClick("ticket")}
             >
-              <FaTicketAlt className="me-2" /> Mi Ticket
+              <FaTicketAlt className="me-2" /> Mis Tickets
             </Nav.Link>
             <Nav.Link
               className="text-white mb-2"
@@ -436,7 +439,7 @@ const DashboardUser = () => {
               <FaLifeRing className="me-2" /> Soporte
             </Nav.Link>
           </Nav>
-          <LogoutButton />          
+          <LogoutButton />
         </div>
 
         {/* Contenido principal */}
@@ -457,7 +460,7 @@ const DashboardUser = () => {
               <strong>
                 {primerNombre} {primerApellido}
               </strong>{" "}
-              👋
+              <i className="bi bi-person-check"></i>              
             </Navbar.Brand>
           </Navbar>
 

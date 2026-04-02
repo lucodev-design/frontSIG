@@ -148,10 +148,10 @@ const DashboardAdmin = () => {
               className={`text-white mb-2 ${activeView === "lista-trabajadores" ? "fw-bold" : ""}`}
               onClick={() => handleNav("lista-trabajadores")}
             >
-              <i className="bi bi-people-fill me-2"></i> Lista Trabajadores
+              <i className="bi bi-people-fill me-2"></i> Remuneraciones
             </Nav.Link>
 
-            {/* ✅ Tickets con badge de notificación */}
+            {/*  Tickets con badge de notificación */}
             <Nav.Link
               className={`text-white mb-2 ${activeView === "tickets" ? "fw-bold" : ""}`}
               onClick={() => handleNav("tickets")}

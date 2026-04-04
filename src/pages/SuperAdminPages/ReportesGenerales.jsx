@@ -397,8 +397,8 @@ export default function ReportesGenerales() {
         <Card.Header className="bg-primary text-white">
           <strong>Filtros de Búsqueda</strong>
         </Card.Header>
-        <Card.Body>
-          <Row className="mb-3">
+        <Card.Body className="p-1">
+          <Row className="mb-3 p-1">
             <Col md={4}>
               <Form.Label>Tipo de Reporte</Form.Label>
               <Form.Select
@@ -658,7 +658,7 @@ export default function ReportesGenerales() {
       )}
 
       {/* TABLA DE RESULTADOS */}
-      <Card className="shadow-sm">
+      <Card className="shadow-sm p-1">
         <Card.Header className="bg-light d-flex align-items-center">
           <strong>Resultados del Reporte</strong>
           {reporteData.length > 0 && (

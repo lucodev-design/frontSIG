@@ -1,88 +1,140 @@
-// src/pages/DashboardUser.jsx
 import React, { useEffect, useState, Suspense, lazy } from "react";
 import { useNavigate } from "react-router-dom";
-import {  Container,  Row,  Col,  Card,  Button,  Navbar,  Nav,  Spinner,  Alert,  Modal,  Table,} from "react-bootstrap";
-import {  FaUser,  FaClock,  FaLifeRing,  FaHome,  FaInfoCircle,  FaTicketAlt,} from "react-icons/fa";
+import { Nav, Spinner, Modal, Table } from "react-bootstrap";
+import {
+  FaUser,
+  FaClock,
+  FaLifeRing,
+  FaHome,
+  FaInfoCircle,
+  FaTicketAlt,
+} from "react-icons/fa";
 import LogoutButton from "../components/logout";
-import { getAsistenciasByUser, marcarAsistencia } from "../api/api";
-import "../templates/styles/DashAdmin.css";
+import { getAsistenciasByUser } from "../api/api";
 
-// ─── Lazy loads ───────────────────────────────────────────────
+import "../templates/dashboard/dashboardUser-shared.css";
+
+// ── Lazy loads ────────────────────────────────────────────────
 const Perfil = lazy(() => import("../pages/UserPages/PerfilUser"));
 const Soporte = lazy(() => import("../pages/UserPages/SoporteUser"));
 const MisAsistencias = lazy(() => import("../pages/UserPages/MisAsistencias"));
-const TicketRemuneracion = lazy(
-  () => import("./UserPages/TicketRemuneracion"),
-);
+const TicketRemuneracion = lazy(() => import("./UserPages/TicketRemuneracion"));
 
-// ─── Helpers de formato (zona horaria Perú) ───────────────────
+// ── Helpers ───────────────────────────────────────────────────
 const LOCALE = "es-PE";
 const TZ = "America/Lima";
 
-const formatSoloFecha = (valor) => {
-  if (!valor) return "-";
+const formatFecha = (v) => {
+  if (!v) return "-";
   try {
-    return new Date(valor).toLocaleDateString(LOCALE, {
+    return new Date(v).toLocaleDateString(LOCALE, {
       timeZone: TZ,
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
     });
   } catch {
-    return valor;
+    return v;
   }
 };
-
-const formatSoloHora = (valor) => {
-  if (!valor) return "-";
+const formatHora = (v) => {
+  if (!v) return "-";
   try {
-    return new Date(valor).toLocaleTimeString(LOCALE, {
+    return new Date(v).toLocaleTimeString(LOCALE, {
       timeZone: TZ,
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
     });
   } catch {
-    return valor;
+    return v;
   }
 };
 
-// ─── Componente principal ─────────────────────────────────────
+// ── Stat Card ─────────────────────────────────────────────────
+const StatCard = ({ label, value, color, icon: Icon, onClick, subtitle }) => {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (value === 0) {
+      setDisplay(0);
+      return;
+    }
+    let s = 0;
+    const step = Math.ceil(value / 30);
+    const t = setInterval(() => {
+      s += step;
+      if (s >= value) {
+        setDisplay(value);
+        clearInterval(t);
+      } else setDisplay(s);
+    }, 30);
+    return () => clearInterval(t);
+  }, [value]);
+
+  return (
+    <div
+      className="sa-stat-card"
+      onClick={onClick}
+      style={{ cursor: onClick ? "pointer" : "default" }}
+    >
+      <div className="sa-stat-icon" style={{ background: color }}>
+        <Icon size={22} color="#fff" />
+      </div>
+      <div className="sa-stat-body">
+        <span className="sa-stat-label">{label}</span>
+        <span className="sa-stat-value">{display.toLocaleString()}</span>
+        {subtitle && <span className="sa-stat-sub">{subtitle}</span>}
+      </div>
+      <div className="sa-stat-bar" style={{ background: color }} />
+    </div>
+  );
+};
+
+// ── Fallback ──────────────────────────────────────────────────
+const Fallback = () => (
+  <div className="sa-fallback">
+    <Spinner animation="border" size="sm" />
+    <span>Cargando...</span>
+  </div>
+);
+
+// ── Badge de estado ───────────────────────────────────────────
+const EstadoBadge = ({ descuento }) => {
+  const d = parseFloat(descuento || 0);
+  return (
+    <span className={`ud-badge ${d > 0 ? "ud-badge--red" : "ud-badge--green"}`}>
+      S/ {d.toFixed(2)}
+    </span>
+  );
+};
+
+// ── Dashboard User ────────────────────────────────────────────
 const DashboardUser = () => {
   const navigate = useNavigate();
-
   const [usuario, setUsuario] = useState(null);
   const [activeModule, setActiveModule] = useState("inicio");
   const [asistencias, setAsistencias] = useState([]);
-  const [cargandoAsistencias, setCargandoAsistencias] = useState(true);
-  const [errorAsistencias, setErrorAsistencias] = useState(null);
-  const [registrando, setRegistrando] = useState(false);
-  const [registroMensaje, setRegistroMensaje] = useState({
-    type: null,
-    text: null,
-  });
-  const [activityModal, setActivityModal] = useState({
-    show: false,
-    data: null,
-  });
+  const [cargando, setCargando] = useState(true);
+  const [errorAsis, setErrorAsis] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [modal, setModal] = useState({ show: false, data: null });
 
   const primerNombre = usuario?.nombre?.split(" ")[0] || "";
   const primerApellido = usuario?.apellidos?.split(" ")[0] || "";
 
-  // ── Validación de sesión ──────────────────────────────────
+  // ── Sesión ────────────────────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-    if (!token || !storedUser) {
+    const stored = localStorage.getItem("user");
+    if (!token || !stored) {
       navigate("/login");
       return;
     }
     try {
-      const userObj = JSON.parse(storedUser);
-      if (userObj && (userObj.id_usuario || userObj.id)) {
-        if (!userObj.id_usuario && userObj.id) userObj.id_usuario = userObj.id;
-        setUsuario(userObj);
+      const u = JSON.parse(stored);
+      if (u && (u.id_usuario || u.id)) {
+        if (!u.id_usuario && u.id) u.id_usuario = u.id;
+        setUsuario(u);
       } else {
         ["token", "user", "rol"].forEach((k) => localStorage.removeItem(k));
         navigate("/login");
@@ -93,382 +145,321 @@ const DashboardUser = () => {
     }
   }, [navigate]);
 
-  // ── Fetch asistencias ─────────────────────────────────────
+  // ── Asistencias ───────────────────────────────────────────
   const fetchAsistencias = async () => {
     if (!usuario?.id_usuario) return;
     try {
-      setCargandoAsistencias(true);
+      setCargando(true);
       const data = await getAsistenciasByUser(usuario.id_usuario);
-      const lista = Array.isArray(data) ? data : data.asistencias || [];
-      setAsistencias(lista);
-      setErrorAsistencias(null);
+      setAsistencias(Array.isArray(data) ? data : data.asistencias || []);
+      setErrorAsis(null);
     } catch {
-      setErrorAsistencias("No se pudieron cargar las asistencias.");
+      setErrorAsis("No se pudieron cargar las asistencias.");
     } finally {
-      setCargandoAsistencias(false);
+      setCargando(false);
     }
   };
-
   useEffect(() => {
     if (usuario?.id_usuario) fetchAsistencias();
   }, [usuario]);
 
+  // ── Scroll cierra sidebar ─────────────────────────────────
   useEffect(() => {
-    if (!registroMensaje.text) return;
-    const t = setTimeout(
-      () => setRegistroMensaje({ type: null, text: null }),
-      5000,
-    );
-    return () => clearTimeout(t);
-  }, [registroMensaje]);
+    const fn = () => {
+      if (sidebarOpen) setSidebarOpen(false);
+    };
+    window.addEventListener("scroll", fn);
+    return () => window.removeEventListener("scroll", fn);
+  }, [sidebarOpen]);
 
-  const handleSidebarClick = (mod) => {
+  const go = (mod) => {
     setActiveModule(mod);
     setSidebarOpen(false);
   };
-  const handleShowActivity = (a) => setActivityModal({ show: true, data: a });
-  const handleCloseActivity = () =>
-    setActivityModal({ show: false, data: null });
 
-  useEffect(() => {
-    const onScroll = () => {
-      if (sidebarOpen) setSidebarOpen(false);
-    };
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [sidebarOpen]);
+  // ── Pantalla de carga inicial ─────────────────────────────
+  if (!usuario)
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100vh",
+          gap: 12,
+          fontFamily: "'Plus Jakarta Sans',sans-serif",
+        }}
+      >
+        <Spinner animation="border" variant="primary" />
+        <span>Cargando...</span>
+      </div>
+    );
 
-  // ── Render Inicio ─────────────────────────────────────────
+  // ── Vista inicio ──────────────────────────────────────────
   const renderInicio = () => (
-    <Container fluid className="p-3 p-md-4" style={{ background: "#f5f6fa" }}>
-      {registroMensaje.text && (
-        <Alert
-          variant={registroMensaje.type}
-          className="mb-4 rounded-3 shadow-sm"
-        >
-          {registroMensaje.text}
-        </Alert>
-      )}
+    <div className="sa-content">
+      <div className="sa-page-title">
+        <h4>Inicio</h4>
+        <span className="sa-page-date">
+          {new Date().toLocaleDateString("es-PE", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </span>
+      </div>
 
-      <Row className="mb-4 g-3">
-        <Col xs={12} sm={6} md={6}>
-          <Card className="shadow-sm border-0 h-100 rounded-3">
-            <Card.Body>
-              <h6 className="text-muted">Asistencias Registradas</h6>
-              <h3 className="text-success">{asistencias.length}</h3>
-              <div className="text-muted">
-                Últimos registros: {Math.min(asistencias.length, 5)}
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+      {/* Stats */}
+      <div className="sa-stats-grid">
+        <StatCard
+          label="Asistencias Registradas"
+          value={asistencias.length}
+          color="#10b981"
+          icon={FaClock}
+          subtitle="Total acumulado"
+          onClick={() => go("perfil")}
+        />
+        <StatCard
+          label="Descuento Acumulado"
+          value={asistencias.reduce(
+            (acc, a) => acc + parseFloat(a.descuento || 0),
+            0,
+          )}
+          color="#ef4444"
+          icon={FaUser}
+          subtitle="S/ en descuentos"
+        />
+      </div>
 
-        <Col xs={12} sm={6} md={6}>
-          <Card className="shadow-sm border-0 h-100 rounded-3">
-            <Card.Body>
-              <FaUser size={36} className="text-primary mb-3" />
-              <Card.Title className="text-primary">Mi Perfil</Card.Title>
-              <Card.Text style={{ whiteSpace: "pre-line" }}>
-                <i className="bi bi-person-fill"></i>
-                <strong> : </strong>{primerNombre} {primerApellido}
-                {"\n"}
-                <i className="bi bi-envelope-at-fill"></i>
-                <strong> : </strong>  {usuario?.email}
-                {"\n"}
-                <i className="bi bi-person-vcard-fill"></i>
-                <strong> : </strong>{usuario?.rol || "Trabajador"}
-              </Card.Text>
-              <Button
-                variant="outline-primary"
-                size="sm"
-                className="w-100"
-                onClick={() => handleSidebarClick("perfil")}
-              >
-                Ver Perfil Completo
-              </Button>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      {/* Perfil rápido */}
+      <div className="ud-profile-card">
+        <div className="ud-profile-avatar">
+          {primerNombre.charAt(0)}
+          {primerApellido.charAt(0)}
+        </div>
+        <div className="ud-profile-info">
+          <p className="ud-profile-name">
+            {primerNombre} {primerApellido}
+          </p>
+          <p className="ud-profile-email">{usuario?.email}</p>
+          <span className="ud-profile-role">
+            {usuario?.rol || "Trabajador"}
+          </span>
+        </div>
+        <button className="ud-profile-btn" onClick={() => go("perfil")}>
+          Ver perfil completo
+        </button>
+      </div>
 
-      <Row className="g-3">
-        <Col xs={12} md={6}>
-          <Card className="shadow-sm border-0 h-100 rounded-3">
-            <Card.Body>
-              <h5 className="text-success mb-3">
-                Resumen de Descuentos (Últimos 5)
-              </h5>
-              {cargandoAsistencias ? (
-                <Spinner animation="border" variant="primary" size="sm" />
-              ) : asistencias.length === 0 ? (
-                <Alert variant="info" className="mb-0">
-                  No hay asistencias recientes registradas.
-                </Alert>
-              ) : (
-                <ul className="list-group list-group-flush">
-                  {asistencias.slice(0, 5).map((a, i) => (
-                    <li
-                      key={a.id_asistencia || i}
-                      className="list-group-item d-flex justify-content-between align-items-center py-2 px-2"
-                      style={{ wordBreak: "break-word" }}
-                    >
-                      <div className="text-truncate">
-                        <strong className="text-muted">
-                          {formatSoloFecha(a.fecha)}
-                        </strong>{" "}
-                        - {a.turno || "-"}
-                      </div>
-                      <span
-                        className={`badge rounded-pill ${a.descuento > 0 ? "bg-danger" : "bg-success"}`}
-                      >
-                        {parseFloat(a.descuento || 0).toFixed(2)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
+      <h6 className="sa-section-title">Mis últimas asistencias</h6>
 
-        <Col xs={12} md={6}>
-          <Card className="shadow-sm border-0 h-100 rounded-3 p-1">
-            <Card.Body>
-              <div className="d-flex align-items-center mb-3">
-                <FaClock size={32} className="text-success me-2" />
-                <h5 className="m-0">Mis Asistencias</h5>
-              </div>
-              {cargandoAsistencias ? (
-                <div className="text-center">
-                  <Spinner animation="border" variant="primary" size="sm" />
-                </div>
-              ) : errorAsistencias ? (
-                <Alert variant="danger" className="mb-0">
-                  {errorAsistencias}
-                </Alert>
-              ) : asistencias.length === 0 ? (
-                <Alert variant="warning" className="mb-0">
-                  Aún no hay registros de asistencia.
-                </Alert>
-              ) : (
-                <div className="table-responsive">
-                  <Table
-                    striped
-                    hover
-                    bordered
-                    size="sm"
-                    className="text-center mb-0 align-middle"
-                  >
-                    <thead className="table-dark">
-                      <tr>
-                        <th>Fecha</th>
-                        <th>Entrada</th>
-                        <th>Detalle</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {asistencias.slice(0, 5).map((a, i) => (
-                        <tr key={a.id_asistencia || i}>
-                          <td className="align-middle">
-                            {formatSoloFecha(a.fecha)}
-                          </td>
-                          <td className="align-middle">
-                            {formatSoloHora(a.hora_entrada)}
-                          </td>
-                          <td className="align-middle">
-                            <Button
-                              size="sm"
-                              variant="info"
-                              onClick={() => handleShowActivity(a)}
-                            >
-                              <FaInfoCircle size={14} />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </div>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Modal detalle */}
-      <Modal show={activityModal.show} onHide={handleCloseActivity} centered>
-        <Modal.Header closeButton className="bg-primary text-white">
-          <Modal.Title>Detalle de Actividad</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {activityModal.data && (
-            <Table striped bordered size="sm" className="mb-0">
+      {/* Tabla */}
+      <div className="ud-table-card">
+        {cargando ? (
+          <div className="sa-fallback">
+            <Spinner animation="border" size="sm" />
+            <span>Cargando asistencias...</span>
+          </div>
+        ) : errorAsis ? (
+          <div className="ud-alert ud-alert--danger">{errorAsis}</div>
+        ) : asistencias.length === 0 ? (
+          <div className="ud-alert ud-alert--info">
+            Aún no hay registros de asistencia.
+          </div>
+        ) : (
+          <div className="ud-table-wrap">
+            <table className="ud-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Turno</th>
+                  <th>Entrada</th>
+                  <th>Descuento</th>
+                  <th></th>
+                </tr>
+              </thead>
               <tbody>
-                <tr>
-                  <td className="fw-bold">Fecha:</td>
-                  <td>{formatSoloFecha(activityModal.data.fecha)}</td>
-                </tr>
-                <tr>
-                  <td className="fw-bold">Hora Entrada:</td>
-                  <td>{formatSoloHora(activityModal.data.hora_entrada)}</td>
-                </tr>
-                <tr>
-                  <td className="fw-bold">Hora Salida:</td>
-                  <td>{formatSoloHora(activityModal.data.hora_salida)}</td>
-                </tr>
-                <tr>
-                  <td className="fw-bold">Turno:</td>
-                  <td>{activityModal.data.turno || "N/A"}</td>
-                </tr>
-                <tr>
-                  <td className="fw-bold">Descuento:</td>
-                  <td>
-                    {parseFloat(activityModal.data.descuento || 0).toFixed(2)}
-                  </td>
-                </tr>
-                <tr>
-                  <td className="fw-bold">Estado:</td>
-                  <td>{activityModal.data.estado || "N/A"}</td>
-                </tr>
+                {asistencias.slice(0, 5).map((a, i) => (
+                  <tr key={a.id_asistencia || i}>
+                    <td>
+                      <strong>{formatFecha(a.fecha)}</strong>
+                    </td>
+                    <td>
+                      <span className="ud-turno-chip">{a.turno || "-"}</span>
+                    </td>
+                    <td>{formatHora(a.hora_entrada)}</td>
+                    <td>
+                      <EstadoBadge descuento={a.descuento} />
+                    </td>
+                    <td>
+                      <button
+                        className="ud-detail-btn"
+                        onClick={() => setModal({ show: true, data: a })}
+                      >
+                        <FaInfoCircle size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
-            </Table>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Modal */}
+      <Modal
+        show={modal.show}
+        onHide={() => setModal({ show: false, data: null })}
+        centered
+      >
+        <Modal.Header
+          closeButton
+          style={{ background: "#1e1f2e", color: "#fff", border: "none" }}
+        >
+          <Modal.Title style={{ fontSize: 16, fontWeight: 700 }}>
+            Detalle de Asistencia
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: 24 }}>
+          {modal.data && (
+            <div className="ud-modal-grid">
+              {[
+                ["Fecha", formatFecha(modal.data.fecha)],
+                ["Hora Entrada", formatHora(modal.data.hora_entrada)],
+                ["Hora Salida", formatHora(modal.data.hora_salida)],
+                ["Turno", modal.data.turno || "N/A"],
+                ["Estado", modal.data.estado || "N/A"],
+                [
+                  "Descuento",
+                  `S/ ${parseFloat(modal.data.descuento || 0).toFixed(2)}`,
+                ],
+              ].map(([k, v]) => (
+                <div key={k} className="ud-modal-row">
+                  <span className="ud-modal-key">{k}</span>
+                  <span className="ud-modal-val">{v}</span>
+                </div>
+              ))}
+            </div>
           )}
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseActivity}>
+        <Modal.Footer style={{ border: "none", padding: "0 24px 20px" }}>
+          <button
+            className="sa-action-btn"
+            style={{ background: "#6366f1" }}
+            onClick={() => setModal({ show: false, data: null })}
+          >
             Cerrar
-          </Button>
+          </button>
         </Modal.Footer>
       </Modal>
-    </Container>
-  );
-
-  // ── Render módulo activo ──────────────────────────────────
-  const fallback = (
-    <div className="text-center py-5">
-      <Spinner animation="border" />
-      <p className="mt-2">Cargando módulo...</p>
     </div>
   );
 
-  const renderModule = () => {
-    if (!usuario?.id_usuario) return renderInicio();
-    switch (activeModule) {
-      case "inicio":
-        return renderInicio();
-      case "perfil":
-        return (
-          <Suspense fallback={fallback}>
-            <Perfil usuario={usuario} AsistenciasComponent={MisAsistencias} />
-          </Suspense>
-        );
-      case "soporte":
-        return (
-          <Suspense fallback={fallback}>
-            <Soporte usuario={usuario} />
-          </Suspense>
-        );
-      case "ticket":
-        return (
-          <Suspense fallback={fallback}>
-            <Container
-              fluid
-              className="p-3 p-md-4"
-              style={{ background: "#f5f6fa" }}
-            >
-              <h4 className="mb-4">
-                <FaTicketAlt className="me-2 text-primary" />
-                Mi Ticket de Remuneración
-              </h4>
-              <TicketRemuneracion usuario={usuario} />
-            </Container>
-          </Suspense>
-        );
-      default:
-        return renderInicio();
-    }
-  };
-
-  if (!usuario) {
-    return (
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "100vh" }}
-      >
-        <Spinner animation="border" variant="primary" />
-        <p className="ms-3 mt-2">Cargando Trabajador...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="body-content">
-      <div
-        className="d-block d-md-flex"
-        style={{ minHeight: "100vh", background: "rgba(255,255,255,0.5)" }}
-      >
-        {/* Sidebar */}
-        <div
-          className={`sidebar d-flex flex-column p-3 ${sidebarOpen ? "open" : ""}`}
-        >
-          <h3 className="text-center mb-4">Panel Trabajador</h3>
-          <Nav className="flex-column nav-list">
-            <Nav.Link
-              className="text-white mb-2"
-              onClick={() => handleSidebarClick("inicio")}
-            >
-              <FaHome className="me-2" /> Inicio
-            </Nav.Link>
-            <Nav.Link
-              className="text-white mb-2"
-              onClick={() => handleSidebarClick("perfil")}
-            >
-              <FaUser className="me-2" /> Perfil
-            </Nav.Link>
-            {/*  Nueva entrada Ticket */}
-            <Nav.Link
-              className="text-white mb-2"
-              onClick={() => handleSidebarClick("ticket")}
-            >
-              <FaTicketAlt className="me-2" /> Mis Tickets
-            </Nav.Link>
-            <Nav.Link
-              className="text-white mb-2"
-              onClick={() => handleSidebarClick("soporte")}
-            >
-              <FaLifeRing className="me-2" /> Soporte
-            </Nav.Link>
-          </Nav>
+    <div className="sa-root">
+      {/* ── Sidebar ── */}
+      <aside className={`sa-sidebar ${sidebarOpen ? "open" : ""}`}>
+        <div className="sa-sidebar-brand">
+          <span className="sa-brand-dot" style={{ background: "#10b981" }} />
+          Panel Trabajador
+        </div>
+
+        <Nav className="flex-column sa-nav">
+          <Nav.Link
+            className={`sa-nav-link ${activeModule === "inicio" ? "active" : ""}`}
+            onClick={() => go("inicio")}
+          >
+            <FaHome className="sa-nav-icon" /> Inicio
+          </Nav.Link>
+          <Nav.Link
+            className={`sa-nav-link ${activeModule === "perfil" ? "active" : ""}`}
+            onClick={() => go("perfil")}
+          >
+            <FaUser className="sa-nav-icon" /> Perfil
+          </Nav.Link>
+          <Nav.Link
+            className={`sa-nav-link ${activeModule === "ticket" ? "active" : ""}`}
+            onClick={() => go("ticket")}
+          >
+            <FaTicketAlt className="sa-nav-icon" /> Mis Tickets
+          </Nav.Link>
+          <Nav.Link
+            className={`sa-nav-link ${activeModule === "soporte" ? "active" : ""}`}
+            onClick={() => go("soporte")}
+          >
+            <FaLifeRing className="sa-nav-icon" /> Soporte
+          </Nav.Link>
+        </Nav>
+
+        <div className="sa-sidebar-footer">
           <LogoutButton />
         </div>
+      </aside>
 
-        {/* Contenido principal */}
-        <div className="flex-grow-1 m-1 p-2 navbar-main-content">
-          <Navbar bg="light" className="shadow-sm px-3">
-            <Button
-              variant="outline-primary"
-              className="d-lg-none me-3"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
+      {/* ── Main ── */}
+      <div className="sa-main">
+        <header className="sa-topbar">
+          <button
+            className="sa-burger d-lg-none"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+          <div className="sa-topbar-user">
+            <div
+              className="sa-user-avatar"
+              style={{ background: "linear-gradient(135deg,#10b981,#0ea5e9)" }}
             >
-              ☰
-            </Button>
-            <Navbar.Brand
-              className="text-truncate"
-              style={{ maxWidth: "70vw" }}
-            >
-              Bienvenido{" "}
-              <strong>
+              {primerNombre.charAt(0)}
+            </div>
+            <div>
+              <p className="sa-user-greeting">Bienvenido de vuelta</p>
+              <p className="sa-user-name">
                 {primerNombre} {primerApellido}
-              </strong>{" "}
-              <i className="bi bi-person-check"></i>              
-            </Navbar.Brand>
-          </Navbar>
+              </p>
+            </div>
+          </div>
+        </header>
 
-          <Container fluid className="p-0" style={{ background: "#f5f6fa" }}>
-            {renderModule()}
-          </Container>
-        </div>
+        {activeModule === "inicio" && renderInicio()}
+
+        {activeModule === "perfil" && (
+          <div className="sa-content">
+            <Suspense fallback={<Fallback />}>
+              <Perfil usuario={usuario} AsistenciasComponent={MisAsistencias} />
+            </Suspense>
+          </div>
+        )}
+
+        {activeModule === "soporte" && (
+          <div className="sa-content">
+            <Suspense fallback={<Fallback />}>
+              <Soporte usuario={usuario} />
+            </Suspense>
+          </div>
+        )}
+
+        {activeModule === "ticket" && (
+          <div className="sa-content">
+            <div className="sa-page-title">
+              <h4>Mi Ticket de Remuneración</h4>
+            </div>
+            <Suspense fallback={<Fallback />}>
+              <TicketRemuneracion usuario={usuario} />
+            </Suspense>
+          </div>
+        )}
       </div>
+
+      {sidebarOpen && (
+        <div className="sa-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      
     </div>
   );
 };

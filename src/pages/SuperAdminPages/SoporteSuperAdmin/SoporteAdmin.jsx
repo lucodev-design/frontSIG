@@ -1,16 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  Card,
-  Table,
-  Badge,
-  Button,
-  Spinner,
-  Form,
-  InputGroup,
-  Modal,
-  Row,
-  Col,
-} from "react-bootstrap";
+import {  Card,  Table,  Badge,  Button,  Spinner,  Form,  InputGroup,  Modal,  Row,  Col,} from "react-bootstrap";
 import { getSoportes, updateSoporte, deleteSoporte } from "../../../api/api";
 
 // ✅ Función auxiliar para formatear fechas
@@ -113,37 +102,46 @@ const SoporteAdmin = () => {
 
   return (
     <div className="p-4">
-      <Row className="mb-4">
-        <Col md={4}>
-          <Card className="shadow-sm text-center p-3">
-            <h6>Total</h6>
-            <h3>{total}</h3>
-          </Card>
-        </Col>
-        <Col md={4}>
-          <Card className="shadow-sm text-center p-3 border-warning">
-            <h6>Pendientes</h6>
-            <h3 className="text-warning">{pendientes}</h3>
-          </Card>
-        </Col>
-        <Col md={4}>
-          <Card className="shadow-sm text-center p-3 border-success">
-            <h6>Atendidos</h6>
-            <h3 className="text-success">{atendidos}</h3>
-          </Card>
-        </Col>
-      </Row>
+      <Row className="gx-2 gy-3 mb-4">
 
-      <Card className="shadow-lg border-0" style={{ borderRadius: "15px" }}>
-        <Card.Body>
+  {/* TOTAL */}
+  <Col xs="4" sm="4" md="4" lg="4" className="d-flex">
+    <Card className="flex-fill text-center p-2">
+      <h6 className="mb-1">Total</h6>
+      <h4 className="mb-0">{total}</h4>
+    </Card>
+  </Col>
+
+  {/* PENDIENTES */}
+  <Col xs="4" sm="4" md="4" lg="4" className="d-flex">
+    <Card className="flex-fill text-center p-2 border-warning">
+      <h6 className="mb-1">Pendientes</h6>
+      <h4 className="text-warning mb-0">{pendientes}</h4>
+    </Card>
+  </Col>
+
+  {/* ATENDIDOS */}
+  <Col xs="4" sm="4" md="4" lg="4" className="d-flex">
+    <Card className="flex-fill text-center p-2 border-success">
+      <h6 className="mb-1">Atendidos</h6>
+      <h4 className="text-success mb-0">{atendidos}</h4>
+    </Card>
+  </Col>
+
+</Row>
+
+      <Card className="shadow-lg border-0 p-3 mt-2" style={{ borderRadius: "15px" }}>
+        <Card.Body className="p-1">
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h4 className="fw-bold m-0">📩 Mensajes de Soporte</h4>
+            <h4 className="fw-bold m-0">
+              <i className="bi bi-chat-right-dots"></i> Mensajes de Soporte
+            </h4>
             <Button
               variant="outline-primary"
               size="sm"
               onClick={cargarSoportes}
             >
-              🔄 Actualizar
+              <i className="bi bi-arrow-repeat"></i> Actualizar
             </Button>
           </div>
 
@@ -208,7 +206,7 @@ const SoporteAdmin = () => {
                             {item.mensaje}
                           </div>
                         </td>
-                        {/* ✅ Fecha formateada en la tabla */}
+                        {/* Fecha formateada en la tabla */}
                         <td>{formatearFecha(item.fecha)}</td>
                         <td>
                           <Badge
@@ -240,7 +238,7 @@ const SoporteAdmin = () => {
                             variant="outline-danger"
                             onClick={() => confirmarEliminar(item.id)}
                           >
-                            🗑️
+                            <i className="bi bi-trash"></i>
                           </Button>
                         </td>
                       </tr>
@@ -266,7 +264,8 @@ const SoporteAdmin = () => {
               </p>
               {/* ✅ Fecha formateada en el modal */}
               <p>
-                <strong>Fecha:</strong> {formatearFecha(soporteSeleccionado.fecha)}
+                <strong>Fecha:</strong>{" "}
+                {formatearFecha(soporteSeleccionado.fecha)}
               </p>
               <hr />
               <p>{soporteSeleccionado.mensaje}</p>

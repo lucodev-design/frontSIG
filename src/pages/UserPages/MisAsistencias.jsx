@@ -1,272 +1,185 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Spinner, Alert, Button, Modal } from "react-bootstrap";
+import { Spinner, Modal } from "react-bootstrap";
 import { FaClock, FaInfoCircle } from "react-icons/fa";
 import { getAsistenciasByUser } from "../../api/api";
 
-// ─── Helpers de formato (zona horaria Perú) ───────────────────
 const LOCALE = "es-PE";
 const TZ = "America/Lima";
 
-const formatSoloFecha = (valor) => {
-  if (!valor) return "-";
-  try {
-    return new Date(valor).toLocaleDateString(LOCALE, {
-      timeZone: TZ,
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  } catch {
-    return valor;
-  }
+const formatFecha = (v) => {
+  if (!v) return "-";
+  try { return new Date(v).toLocaleDateString(LOCALE, { timeZone: TZ, day: "2-digit", month: "2-digit", year: "numeric" }); }
+  catch { return v; }
+};
+const formatHora = (v) => {
+  if (!v) return "-";
+  try { return new Date(v).toLocaleTimeString(LOCALE, { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: true }); }
+  catch { return v; }
 };
 
-const formatSoloHora = (valor) => {
-  if (!valor) return "-";
-  try {
-    return new Date(valor).toLocaleTimeString(LOCALE, {
-      timeZone: TZ,
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  } catch {
-    return valor;
-  }
+const EstadoBadge = ({ estado }) => {
+  const map = {
+    "Salida":   { bg: "rgba(239,68,68,0.1)",   color: "#ef4444", border: "rgba(239,68,68,0.2)" },
+    "Tarde":    { bg: "rgba(245,158,11,0.1)",  color: "#f59e0b", border: "rgba(245,158,11,0.2)" },
+    "A tiempo": { bg: "rgba(16,185,129,0.1)",  color: "#10b981", border: "rgba(16,185,129,0.2)" },
+    "Entrada":  { bg: "rgba(16,185,129,0.1)",  color: "#10b981", border: "rgba(16,185,129,0.2)" },
+  };
+  const s = map[estado] || { bg: "rgba(156,163,175,0.1)", color: "#9ca3af", border: "rgba(156,163,175,0.2)" };
+  return (
+    <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 100, background: s.bg, color: s.color, border: `1px solid ${s.border}`, whiteSpace: "nowrap" }}>
+      {estado || "-"}
+    </span>
+  );
 };
 
-const formatFechaHora = (valor) => {
-  if (!valor) return "-";
-  try {
-    return new Date(valor).toLocaleString(LOCALE, {
-      timeZone: TZ,
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  } catch {
-    return valor;
-  }
+const DescuentoBadge = ({ valor }) => {
+  const d = parseFloat(valor || 0);
+  return (
+    <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 100, background: d > 0 ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", color: d > 0 ? "#ef4444" : "#10b981" }}>
+      S/ {d.toFixed(2)}
+    </span>
+  );
 };
 
-// ─── Componente ───────────────────────────────────────────────
 const MisAsistencias = ({ usuario }) => {
   const [asistencias, setAsistencias] = useState([]);
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState(null);
-  const [activityModal, setActivityModal] = useState({
-    show: false,
-    data: null,
-  });
+  const [cargando, setCargando]       = useState(true);
+  const [error, setError]             = useState(null);
+  const [modal, setModal]             = useState({ show: false, data: null });
 
   const fetchAsistencias = async () => {
-    if (!usuario?.id_usuario) {
-      setError("Error: ID de usuario no disponible.");
-      setCargando(false);
-      return;
-    }
-
+    if (!usuario?.id_usuario) { setError("ID de usuario no disponible."); setCargando(false); return; }
     try {
       setCargando(true);
-      const response = await getAsistenciasByUser(usuario.id_usuario);
-
-      let asistenciasList = response;
-
-      if (response?.data && Array.isArray(response.data)) {
-        asistenciasList = response.data;
-      } else if (response?.asistencias && Array.isArray(response.asistencias)) {
-        asistenciasList = response.asistencias;
-      } else if (!Array.isArray(response)) {
-        console.warn("Respuesta de API inesperada:", response);
-        asistenciasList = [];
-      }
-
-      setAsistencias(asistenciasList);
+      const res = await getAsistenciasByUser(usuario.id_usuario);
+      const lista = Array.isArray(res) ? res : res?.asistencias || res?.data || [];
+      setAsistencias(lista);
       setError(null);
     } catch (err) {
-      console.error("❌ Error al obtener asistencias:", err);
+      console.error("[MisAsistencias] Error:", err);
       setError(err.message || "No se pudieron cargar las asistencias.");
-    } finally {
-      setCargando(false);
-    }
+    } finally { setCargando(false); }
   };
 
   useEffect(() => {
     fetchAsistencias();
-    const interval = setInterval(fetchAsistencias, 5000);
-    return () => clearInterval(interval);
+    const id = setInterval(fetchAsistencias, 5000);
+    return () => clearInterval(id);
   }, [usuario]);
 
-  const handleShowActivity = (a) => setActivityModal({ show: true, data: a });
-  const handleCloseActivity = () =>
-    setActivityModal({ show: false, data: null });
-
-  const getStateClass = (estado) => {
-    switch (estado) {
-      case "Salida":
-        return "text-danger";
-      case "Tarde":
-        return "text-warning";
-      case "A tiempo":
-      case "Entrada":
-        return "text-success";
-      default:
-        return "text-muted";
-    }
-  };
-
-  const getStateBadgeClass = (estado) => {
-    switch (estado) {
-      case "Salida":
-        return "bg-danger";
-      case "Tarde":
-        return "bg-warning text-dark";
-      case "A tiempo":
-      case "Entrada":
-        return "bg-success";
-      default:
-        return "bg-secondary";
-    }
-  };
-
   return (
-    <Card className="shadow-sm border-0 p-1">
-      <Card.Body className=" p-1 ">
-        <div className="d-flex align-items-center mb-3">
-          <FaClock size={35} className="text-success me-2" />
-          <h5 className="m-0">Mis Registros de Asistencia</h5>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(16,185,129,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaClock size={18} color="#10b981" />
         </div>
+        <div>
+          <h5 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1e1f2e" }}>Mis Registros de Asistencia</h5>
+          <p style={{ margin: 0, fontSize: 12, color: "#9ca3af" }}>{asistencias.length} registro{asistencias.length !== 1 ? "s" : ""} encontrado{asistencias.length !== 1 ? "s" : ""}</p>
+        </div>
+      </div>
 
+      {/* Contenido */}
+      <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)", overflow: "hidden" }}>
         {cargando ? (
-          <div className="text-center py-4">
-            <Spinner animation="border" variant="primary" />
-            <p className="mt-2">Cargando asistencias...</p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: 60, color: "#9ca3af", fontSize: 14 }}>
+            <Spinner animation="border" size="sm" /><span>Cargando asistencias...</span>
           </div>
         ) : error ? (
-          <Alert variant="danger">{error}</Alert>
+          <div style={{ padding: "16px 20px", background: "rgba(239,68,68,0.06)", color: "#b91c1c", fontSize: 13 }}>{error}</div>
         ) : asistencias.length === 0 ? (
-          <Alert variant="warning">
-            No hay asistencias registradas para su usuario.
-          </Alert>
+          <div style={{ padding: "16px 20px", background: "rgba(14,165,233,0.06)", color: "#0369a1", fontSize: 13 }}>
+            No hay asistencias registradas para tu usuario.
+          </div>
         ) : (
-          <div className="table-responsive">
-            <Table
-              striped
-              bordered
-              hover
-              size="sm"
-              className="text-center align-middle"
-            >
-              <thead className="table-dark">
-                <tr>
-                  <th>#</th>
-                  <th>Fecha</th>
-                  <th>Hora Entrada</th>
-                  <th>Hora Salida</th>
-                  <th>Turno</th>
-                  <th>Descuento</th>
-                  <th>Estado</th>
-                  <th>Detalle</th>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: "#f8f9fc" }}>
+                  {["#", "Fecha", "Hora Entrada", "Hora Salida", "Turno", "Descuento", "Estado", ""].map((h) => (
+                    <th key={h} style={{ padding: "12px 16px", fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", textAlign: "left", borderBottom: "1px solid #f0f2f8", whiteSpace: "nowrap" }}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {asistencias.map((a, i) => (
-                  <tr key={a.id_asistencia || a.id || i}>
-                    <td>{i + 1}</td>
-                    {/* ✅ fecha y horas formateadas a Perú */}
-                    <td>{formatSoloFecha(a.fecha)}</td>
-                    <td>{formatSoloHora(a.hora_entrada)}</td>
-                    <td>{formatSoloHora(a.hora_salida)}</td>
-                    <td>{a.turno || "-"}</td>
-                    <td>
-                      {a.descuento != null
-                        ? parseFloat(a.descuento).toFixed(2)
-                        : a.minutos_tarde != null
-                          ? parseFloat(a.minutos_tarde).toFixed(2)
-                          : "0.00"}
-                    </td>
-                    <td>
-                      <span className={`fw-bold ${getStateClass(a.estado)}`}>
-                        {a.estado || "-"}
+                  <tr key={a.id_asistencia || a.id || i} style={{ borderBottom: "1px solid #f8f9fc", transition: "background 0.15s" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "#fafbff"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  >
+                    <td style={{ padding: "12px 16px", color: "#9ca3af", fontWeight: 600 }}>{i + 1}</td>
+                    <td style={{ padding: "12px 16px", color: "#1e1f2e", fontWeight: 600 }}>{formatFecha(a.fecha)}</td>
+                    <td style={{ padding: "12px 16px", color: "#374151" }}>{formatHora(a.hora_entrada)}</td>
+                    <td style={{ padding: "12px 16px", color: "#374151" }}>{formatHora(a.hora_salida)}</td>
+                    <td style={{ padding: "12px 16px" }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 100, background: "rgba(99,102,241,0.1)", color: "#6366f1", border: "1px solid rgba(99,102,241,0.15)" }}>
+                        {a.turno || "-"}
                       </span>
                     </td>
-                    <td>
-                      <Button
-                        size="sm"
-                        variant="info"
-                        onClick={() => handleShowActivity(a)}
+                    <td style={{ padding: "12px 16px" }}>
+                      <DescuentoBadge valor={a.descuento ?? a.minutos_tarde} />
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
+                      <EstadoBadge estado={a.estado} />
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
+                      <button
+                        onClick={() => setModal({ show: true, data: a })}
+                        style={{ background: "rgba(99,102,241,0.1)", border: "none", borderRadius: 8, padding: "6px 10px", color: "#6366f1", cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "rgba(99,102,241,0.2)"}
+                        onMouseLeave={e => e.currentTarget.style.background = "rgba(99,102,241,0.1)"}
                       >
-                        <FaInfoCircle />
-                      </Button>
+                        <FaInfoCircle size={14} />
+                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
-            </Table>
+            </table>
           </div>
         )}
+      </div>
 
-        {/* ── Modal detalle ── */}
-        <Modal show={activityModal.show} onHide={handleCloseActivity} centered>
-          <Modal.Header closeButton className="bg-light">
-            <Modal.Title>Detalle de Actividad</Modal.Title>
-          </Modal.Header>
-
-          <Modal.Body>
-            {activityModal.data && (
-              <Table striped bordered size="sm" className="mb-0">
-                <tbody>
-                  <tr>
-                    <td className="fw-bold">Fecha:</td>
-                    {/* ✅ fecha formateada */}
-                    <td>{formatSoloFecha(activityModal.data.fecha)}</td>
-                  </tr>
-                  <tr>
-                    <td className="fw-bold">Hora Entrada:</td>
-                    {/* ✅ hora formateada */}
-                    <td>{formatSoloHora(activityModal.data.hora_entrada)}</td>
-                  </tr>
-                  <tr>
-                    <td className="fw-bold">Hora Salida:</td>
-                    {/* ✅ hora formateada */}
-                    <td>{formatSoloHora(activityModal.data.hora_salida)}</td>
-                  </tr>
-                  <tr>
-                    <td className="fw-bold">Turno:</td>
-                    <td>{activityModal.data.turno || "N/A"}</td>
-                  </tr>
-                  <tr>
-                    <td className="fw-bold">Descuento/Atraso:</td>
-                    <td>
-                      {parseFloat(activityModal.data.descuento || 0).toFixed(2)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="fw-bold">Estado:</td>
-                    <td>
-                      <span
-                        className={`badge ${getStateBadgeClass(activityModal.data.estado)}`}
-                      >
-                        {activityModal.data.estado || "N/A"}
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </Table>
-            )}
-          </Modal.Body>
-
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseActivity}>
-              Cerrar
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      </Card.Body>
-    </Card>
+      {/* Modal */}
+      <Modal show={modal.show} onHide={() => setModal({ show: false, data: null })} centered>
+        <Modal.Header closeButton style={{ background: "#1e1f2e", color: "#fff", border: "none" }}>
+          <Modal.Title style={{ fontSize: 15, fontWeight: 700 }}>Detalle de Asistencia</Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: 24 }}>
+          {modal.data && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {[
+                ["Fecha",            formatFecha(modal.data.fecha)],
+                ["Hora Entrada",     formatHora(modal.data.hora_entrada)],
+                ["Hora Salida",      formatHora(modal.data.hora_salida)],
+                ["Turno",            modal.data.turno || "N/A"],
+                ["Estado",           null],
+                ["Descuento",        `S/ ${parseFloat(modal.data.descuento || 0).toFixed(2)}`],
+              ].map(([k, v]) => (
+                <div key={k} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 0", borderBottom: "1px solid #f0f2f8" }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#9ca3af" }}>{k}</span>
+                  {k === "Estado"
+                    ? <EstadoBadge estado={modal.data.estado} />
+                    : <span style={{ fontSize: 13, fontWeight: 600, color: "#1e1f2e" }}>{v}</span>
+                  }
+                </div>
+              ))}
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer style={{ border: "none", padding: "0 24px 20px" }}>
+          <button
+            style={{ border: "none", borderRadius: 10, padding: "9px 20px", background: "#6366f1", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif" }}
+            onClick={() => setModal({ show: false, data: null })}
+          >
+            Cerrar
+          </button>
+        </Modal.Footer>
+      </Modal>
+    </div>
   );
 };
 

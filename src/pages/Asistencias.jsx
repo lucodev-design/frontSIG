@@ -1,106 +1,97 @@
 import React, { useEffect, useRef, useState } from "react";
 import QrScanner from "qr-scanner";
-import qrScannerWorkerPath from "qr-scanner/qr-scanner-worker.min?url";
-import "../templates/styles/asistencia.css";
 import { marcarAsistencia } from "../api/api";
+import "../templates/styles/asistencia.css";
+
+// ─── Estados posibles del escáner ────────────────────────────────────────────
+const ESTADO = {
+  IDLE: "idle",
+  ESCANEANDO: "escaneando",
+  CARGANDO: "cargando",
+  EXITO: "exito",
+  ERROR: "error",
+};
 
 const Asistencia = () => {
   const videoRef = useRef(null);
   const scannerRef = useRef(null);
+  const ultimoQRRef = useRef("");
+
+  const [estado, setEstado] = useState(ESTADO.IDLE);
   const [mensaje, setMensaje] = useState("");
   const [usuario, setUsuario] = useState(null);
   const [codigoQR, setCodigoQR] = useState("");
-  const [ultimoQR, setUltimoQR] = useState("");
-  const [origenError, setOrigenError] = useState("");
+  const [pulso, setPulso] = useState(false);
 
+  // ─── Determinar turno por hora ──────────────────────────────────────────────
+  const obtenerTurno = () => {
+    const hora = new Date().getHours();
+    return hora < 13 ? "Mañana" : "Tarde";
+  };
+
+  // ─── Reiniciar al estado de escaneo ────────────────────────────────────────
+  const reiniciar = () => {
+    setEstado(ESTADO.ESCANEANDO);
+    setMensaje("");
+    setUsuario(null);
+    setCodigoQR("");
+    ultimoQRRef.current = "";
+  };
+
+  // ─── Inicializar escáner ────────────────────────────────────────────────────
   useEffect(() => {
     if (!videoRef.current) return;
 
-    let escaneoBloqueado = false; 
+    let bloqueado = false;
 
     const scanner = new QrScanner(
       videoRef.current,
       async (result) => {
-        if (escaneoBloqueado || !result?.data || result.data === ultimoQR) return;
+        if (bloqueado || !result?.data || result.data === ultimoQRRef.current) return;
 
-        escaneoBloqueado = true; 
-        
+        bloqueado = true;
         const qr_code = result.data.trim();
-        setUltimoQR(qr_code);
+        ultimoQRRef.current = qr_code;
+
         setCodigoQR(qr_code);
+        setEstado(ESTADO.CARGANDO);
+        setPulso(true);
+
+        const turno = obtenerTurno();
+        console.log("[Asistencia] QR detectado:", qr_code, "| Turno:", turno);
 
         try {
-          // ✅ CAMBIO: Determinar el turno basándose en la hora actual
-          // Para usuarios con "Tiempo Completo", el backend manejará la validación
-          const horaActual = new Date().getHours();
-          let turno;
-          
-          if (horaActual < 13) {
-            turno = "Mañana";
-          } else if (horaActual >= 13 && horaActual < 19) {
-            turno = "Tarde";
-          } else {
-            // Para horas fuera del horario normal, enviar "Tarde"
-            // El backend validará según el turno asignado del usuario
-            turno = "Tarde";
-          }
-
-          console.log("📤 Enviando a marcarAsistencia:", { qr_code, turno, hora: horaActual });
-
           const info = await marcarAsistencia(qr_code, turno);
-          console.log("📥 Respuesta del backend:", info);
+          console.log("[Asistencia] Respuesta backend:", info);
 
           if (info?.success && info.usuario) {
             setUsuario(info.usuario);
-            setMensaje(info.message || "✅ Asistencia registrada correctamente.");
-            setOrigenError("");
-          } else if (info?.message) {
-            console.warn("⚠️ Error backend:", info.message);
-            setUsuario(info.usuario || null); // ✅ Mostrar datos del usuario incluso en error
-            setMensaje(`❌ ${info.message}`);
-            setOrigenError("BACKEND");
+            setMensaje(info.message || "Asistencia registrada correctamente.");
+            setEstado(ESTADO.EXITO);
           } else {
-            console.error("❌ Respuesta inesperada:", info);
-            setUsuario(null);
-            setMensaje("❌ Respuesta inesperada del servidor.");
-            setOrigenError("BACKEND");
+            console.warn("[Asistencia] Respuesta con error:", info?.message);
+            setUsuario(info?.usuario || null);
+            setMensaje(info?.message || "Respuesta inesperada del servidor.");
+            setEstado(ESTADO.ERROR);
           }
         } catch (err) {
-          console.error("❌ Error al registrar asistencia:", err);
+          console.error("[Asistencia] Error al registrar:", err);
 
-          if (err.response) {
-            console.error("📡 BACKEND ERROR:", err.response);
-            
-            // ✅ Extraer mensaje y datos del usuario del error
-            const errorMessage = err.response.data?.message || "Error desconocido del servidor";
-            const errorUsuario = err.response.data?.usuario || null;
-            
-            setMensaje(`❌ ${errorMessage}`);
-            setUsuario(errorUsuario); // ✅ Mostrar datos del usuario incluso en error
-            setOrigenError("BACKEND");
-          } else if (err.request) {
-            console.error("📡 Sin respuesta del backend:", err.request);
-            setMensaje("❌ No hubo respuesta del servidor (posible desconexión).");
-            setOrigenError("BACKEND");
-          } else {
-            console.error("⚠️ FRONTEND ERROR:", err.message);
-            setMensaje(`❌ Error en el frontend: ${err.message}`);
-            setOrigenError("FRONTEND");
-          }
+          const msg =
+            err?.response?.data?.message ||
+            err?.message ||
+            "Error desconocido del servidor.";
 
-          if (!err.response?.data?.usuario) {
-            setUsuario(null);
-          }
+          setMensaje(msg);
+          setUsuario(err?.response?.data?.usuario || null);
+          setEstado(ESTADO.ERROR);
+        } finally {
+          setPulso(false);
         }
 
-        // 🧹 Limpieza de estados después de 5 segundos
         setTimeout(() => {
-          setMensaje("");
-          setUsuario(null);
-          setCodigoQR("");
-          setUltimoQR("");
-          setOrigenError("");
-          escaneoBloqueado = false;
+          reiniciar();
+          bloqueado = false;
         }, 5000);
       },
       {
@@ -114,11 +105,14 @@ const Asistencia = () => {
 
     scanner
       .start()
-      .then(() => console.log("🎥 Cámara iniciada correctamente"))
+      .then(() => {
+        console.log("[Asistencia] Camara iniciada.");
+        setEstado(ESTADO.ESCANEANDO);
+      })
       .catch((err) => {
-        console.error("❌ Error al iniciar cámara:", err);
-        setMensaje("❌ No se pudo iniciar la cámara");
-        setOrigenError("FRONTEND");
+        console.error("[Asistencia] Error al iniciar camara:", err);
+        setMensaje("No se pudo iniciar la camara.");
+        setEstado(ESTADO.ERROR);
       });
 
     return () => {
@@ -126,75 +120,101 @@ const Asistencia = () => {
         scannerRef.current?.stop?.();
         scannerRef.current?.destroy?.();
       } catch (e) {
-        console.warn("⚠️ Error al limpiar escáner:", e);
+        console.warn("[Asistencia] Error al limpiar escaner:", e);
       }
     };
-  }, [ultimoQR]);
+  }, []);
+
+  // ─── Clases dinámicas del contenedor según estado ──────────────────────────
+  const ringClass =
+    estado === ESTADO.EXITO
+      ? "ring ring--success"
+      : estado === ESTADO.ERROR
+      ? "ring ring--error"
+      : estado === ESTADO.CARGANDO
+      ? "ring ring--loading"
+      : "ring ring--idle";
 
   return (
-    <div className="asistencia-container">
-      <h2 className="text-center mb-4 title">📋 Registro de Asistencia</h2>
-      <div className="asistencia-card shadow">
-        <div className="card-body text-center">
-          <div className="video-wrapper">
-            <video ref={videoRef} muted className="video-scan" />
+    <div className="asistencia-root">
+      {/* Header */}
+      <header className="asistencia-header">
+        <div className="header-dot" />
+        <span className="header-label">Control de Asistencia</span>
+      </header>
+
+      <main className="asistencia-main">
+        {/* Video con anillo de estado */}
+        <div className={ringClass}>
+          {estado === ESTADO.CARGANDO && <div className="spinner" />}
+          <div className="video-frame">
+            <video ref={videoRef} muted playsInline className="video-scan" />
+            <div className="scan-line" />
           </div>
+        </div>
 
-          {mensaje && (
-            <div
-              className={`alert mt-3 ${
-                origenError === "BACKEND"
-                  ? "alert-danger"
-                  : origenError === "FRONTEND"
-                  ? "alert-warning"
-                  : "alert-success"
-              }`}
-            >
-              {mensaje}
-              {origenError && (
-                <div className="mt-2">
-                  <strong>📍 Origen:</strong> {origenError}
-                </div>
-              )}
+        {/* Estado label */}
+        <div className={`status-badge status-badge--${estado}`}>
+          {estado === ESTADO.IDLE && "Iniciando camara..."}
+          {estado === ESTADO.ESCANEANDO && "Listo para escanear"}
+          {estado === ESTADO.CARGANDO && "Registrando asistencia..."}
+          {estado === ESTADO.EXITO && "Asistencia registrada"}
+          {estado === ESTADO.ERROR && "Error al registrar"}
+        </div>
+
+        {/* Mensaje */}
+        {mensaje && (
+          <div className={`mensaje-box mensaje-box--${estado}`}>
+            {mensaje}
+          </div>
+        )}
+
+        {/* Datos del usuario */}
+        {usuario && (
+          <div className="usuario-card">
+            <div className="usuario-avatar">
+              {usuario.nombre?.charAt(0)}{usuario.apellidos?.charAt(0)}
             </div>
-          )}
-
-          {usuario && (
-            <div className="alert alert-info mt-2 text-start">
-              <p>
-                <strong>👤 Nombre:</strong> {usuario.nombre} {usuario.apellidos}
+            <div className="usuario-info">
+              <p className="usuario-nombre">
+                {usuario.nombre} {usuario.apellidos}
               </p>
-              <p>
-                <strong>🆔 DNI:</strong> {usuario.dni}
-              </p>
-              <p>
-                <strong>⏰ Turno:</strong> {usuario.turno}
-              </p>
-              <p>
-                <strong>📊 Estado:</strong> {usuario.estado}
-              </p>
+              <div className="usuario-meta">
+                <span className="meta-chip">DNI: {usuario.dni}</span>
+                <span className="meta-chip">Turno: {usuario.turno}</span>
+                <span className={`meta-chip meta-chip--estado meta-chip--${usuario.estado?.toLowerCase()}`}>
+                  {usuario.estado}
+                </span>
+              </div>
               {usuario.descuento && parseFloat(usuario.descuento) > 0 && (
-                <p className="text-danger">
-                  <strong>💰 Descuento:</strong> S/ {usuario.descuento}
+                <p className="usuario-descuento">
+                  Descuento aplicado: S/ {usuario.descuento}
                 </p>
               )}
             </div>
-          )}
+          </div>
+        )}
 
-          {codigoQR && (
-            <div className="alert alert-secondary mt-2">
-              <strong>🔍 QR leído:</strong> {codigoQR}
-            </div>
-          )}
+        {/* QR leído */}
+        {codigoQR && (
+          <div className="qr-pill">
+            <span className="qr-pill-label">QR</span>
+            <span className="qr-pill-value">{codigoQR}</span>
+          </div>
+        )}
+      </main>
 
-          <button
-            onClick={() => (window.location.href = "/selector")}
-            className="btn btn-primary mt-3 w-100"
-          >
-            🔑 Ir a Login
-          </button>
-        </div>
-      </div>
+      {/* Footer */}
+      <footer className="asistencia-footer">
+        <button
+          className="btn-login"
+          onClick={() => (window.location.href = "/selector")}
+        >
+          Ir al Login
+        </button>
+      </footer>
+
+      
     </div>
   );
 };

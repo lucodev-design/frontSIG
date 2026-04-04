@@ -1,30 +1,8 @@
 // src/pages/AdminPages/ReceptorTickets.jsx
 import React, { useEffect, useState, useCallback } from "react";
-import {
-  Card,
-  Row,
-  Col,
-  Badge,
-  Button,
-  Spinner,
-  Alert,
-  Modal,
-  Table,
-} from "react-bootstrap";
-import {
-  FaTicketAlt,
-  FaCheckCircle,
-  FaClock,
-  FaUser,
-  FaMapMarkerAlt,
-  FaMoneyBillWave,
-  FaTrash,
-} from "react-icons/fa";
-import {
-  getTicketsAdmin,
-  marcarTicketsVistos,
-  actualizarEstadoTicket,
-  eliminarTicketAdmin,
+import {  Card,  Row,  Col,  Badge,  Button,  Spinner,  Alert,  Modal,  Table,} from "react-bootstrap";
+import {  FaTicketAlt,  FaCheckCircle,  FaClock,  FaUser, FaMapMarkerAlt,  FaMoneyBillWave,  FaTrash,} from "react-icons/fa";
+import {  getTicketsAdmin,  marcarTicketsVistos,  actualizarEstadoTicket,  eliminarTicketAdmin,
 } from "../../api/api";
 
 const colorEstado = (estado) => {

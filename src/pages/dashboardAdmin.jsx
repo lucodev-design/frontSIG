@@ -1,408 +1,292 @@
-// src/pages/DashboardAdmin.jsx
 import React, { useEffect, useState, Suspense, lazy } from "react";
 import { useNavigate } from "react-router-dom";
+import { Nav, Spinner } from "react-bootstrap";
 import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Button,
-  Navbar,
-  Nav,
-  Spinner,
-} from "react-bootstrap";
-import {
-  FaUsers,
-  FaChartBar,
-  FaCogs,
-  FaHome,
-  FaUserPlus,
-  FaList,
-  FaTicketAlt,
+  FaUsers, FaChartBar, FaCogs, FaHome,
+  FaUserPlus, FaList, FaTicketAlt,
 } from "react-icons/fa";
 import LogoutButton from "../components/logout";
 import ContadorAsistenciasDiarias from "../components/panelConponents/ContadorAsistenciasDiarias";
 import CantidadUsuarios from "../components/panelConponents/CantidadUsuarios";
 import { contarTicketsNuevos } from "../api/api";
-import "../templates/styles/DashAdmin.css";
+import "../templates/dashboard/dashboardAdmin-shared.css";
+
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 // ── Lazy loads ────────────────────────────────────────────────
-const GestionUsuarios = lazy(
-  () => import("../pages/AdminPages/GestionUsuario"),
-);
-const ListUser = lazy(() => import("../pages/AdminPages/ListUser"));
-const ReporteAsistencia = lazy(
-  () => import("../pages/AdminPages/ReporteAsistencia"),
-);
-const ConfiguracionesAdmin = lazy(
-  () => import("../pages/AdminPages/ConfiguracionesAdmin"),
-);
-const ListaTrabajadores = lazy(() => import("./AdminPages/pass/ListaTrabajadores"));
-const ReceptorTickets = lazy(
-  () => import("../pages/AdminPages/ReceptorTickets"),
+const GestionUsuarios    = lazy(() => import("../pages/AdminPages/GestionUsuario"));
+const ListUser           = lazy(() => import("../pages/AdminPages/ListUser"));
+const ReporteAsistencia  = lazy(() => import("../pages/AdminPages/ReporteAsistencia"));
+const ConfiguracionesAdmin = lazy(() => import("../pages/AdminPages/ConfiguracionesAdmin"));
+const ListaTrabajadores  = lazy(() => import("./AdminPages/pass/ListaTrabajadores"));
+const ReceptorTickets    = lazy(() => import("../pages/AdminPages/ReceptorTickets"));
+
+// ─── Stat Card ────────────────────────────────────────────────
+const StatCard = ({ label, value, loading, color, icon: Icon, onClick, subtitle, badge }) => {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (loading || value === 0) { setDisplay(0); return; }
+    let start = 0;
+    const step = Math.ceil(value / 30);
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= value) { setDisplay(value); clearInterval(timer); }
+      else setDisplay(start);
+    }, 30);
+    return () => clearInterval(timer);
+  }, [value, loading]);
+
+  return (
+    <div className="sa-stat-card" onClick={onClick} style={{ cursor: onClick ? "pointer" : "default" }}>
+      <div className="sa-stat-icon" style={{ background: color }}>
+        <Icon size={22} color="#fff" />
+      </div>
+      <div className="sa-stat-body">
+        <span className="sa-stat-label">{label}</span>
+        {loading
+          ? <div className="sa-stat-skeleton" />
+          : <span className="sa-stat-value">{display.toLocaleString()}</span>
+        }
+        {subtitle && <span className="sa-stat-sub">{subtitle}</span>}
+      </div>
+      {badge > 0 && (
+        <div className="sa-stat-badge">{badge > 99 ? "99+" : badge}</div>
+      )}
+      <div className="sa-stat-bar" style={{ background: color }} />
+    </div>
+  );
+};
+
+// ─── Action Card ──────────────────────────────────────────────
+const ActionCard = ({ title, desc, color, icon: Icon, btnLabel, onClick, badge }) => (
+  <div className="sa-action-card">
+    <div style={{ position: "relative", display: "inline-block" }}>
+      <div className="sa-action-icon" style={{ background: color }}>
+        <Icon size={28} color="#fff" />
+      </div>
+      {badge > 0 && (
+        <span className="sa-action-badge">{badge > 99 ? "99+" : badge}</span>
+      )}
+    </div>
+    <h6 className="sa-action-title">{title}</h6>
+    <p className="sa-action-desc">{desc}</p>
+    <button className="sa-action-btn" style={{ background: color }} onClick={onClick}>
+      {btnLabel}{badge > 0 ? ` (${badge} nuevos)` : ""}
+    </button>
+  </div>
 );
 
+// ─── Fallback ─────────────────────────────────────────────────
+const Fallback = () => (
+  <div className="sa-fallback">
+    <Spinner animation="border" size="sm" />
+    <span>Cargando...</span>
+  </div>
+);
+
+// ─── Dashboard Admin ──────────────────────────────────────────
 const DashboardAdmin = () => {
   const navigate = useNavigate();
-  const [nombre, setNombre] = useState("");
-  const [activeView, setActiveView] = useState("home");
+  const [nombre, setNombre]           = useState("");
+  const [activeView, setActiveView]   = useState("home");
   const [activeUserView, setActiveUserView] = useState("form");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [ticketsNuevos, setTicketsNuevos] = useState(0);
 
+  // ── Sesión ──────────────────────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const user = localStorage.getItem("user");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+    const user  = localStorage.getItem("user");
+    if (!token) { navigate("/login"); return; }
     if (user) {
-      try {
-        const userObj = JSON.parse(user);
-        setNombre(userObj.nombre || "Administrador");
-      } catch {
-        setNombre("Administrador");
-      }
+      try { setNombre(JSON.parse(user).nombre || "Administrador"); }
+      catch { setNombre("Administrador"); }
     }
   }, [navigate]);
 
-  // ── Polling de tickets nuevos cada 30s ───────────────────
+  // ── Polling tickets ──────────────────────────────────────────
   useEffect(() => {
-    const fetchCount = async () => {
+    const fetch_ = async () => {
       try {
         const data = await contarTicketsNuevos();
         setTicketsNuevos(data.total || 0);
-      } catch {
-        /* silencioso */
-      }
+      } catch { /* silencioso */ }
     };
-    fetchCount();
-    const interval = setInterval(fetchCount, 30000);
-    return () => clearInterval(interval);
+    fetch_();
+    const id = setInterval(fetch_, 30000);
+    return () => clearInterval(id);
   }, []);
 
-  // Limpiar badge al entrar a tickets
-  const handleNav = (view) => {
+  // ── Scroll cierra sidebar ─────────────────────────────────
+  useEffect(() => {
+    const fn = () => { if (sidebarOpen) setSidebarOpen(false); };
+    window.addEventListener("scroll", fn);
+    return () => window.removeEventListener("scroll", fn);
+  }, [sidebarOpen]);
+
+  const go = (view) => {
     setActiveView(view);
     setSidebarOpen(false);
     if (view === "tickets") setTicketsNuevos(0);
   };
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (sidebarOpen) setSidebarOpen(false);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [sidebarOpen]);
-
-  const fallback = (
-    <div className="text-center py-5">
-      <Spinner animation="border" />
-    </div>
-  );
-
   return (
-    <div className="body-content">
-      <div
-        className="d-block d-md-flex"
-        style={{ minHeight: "100vh", background: "rgba(255, 255, 255, 0.5)" }}
-      >
-        {/* Overlay móvil */}
-        {sidebarOpen && (
-          <div
-            onClick={() => setSidebarOpen(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(0,0,0,0.4)",
-              zIndex: 999,
-            }}
-          />
-        )}
-
-        {/* ── Sidebar ── */}
-        <div
-          className={`sidebar d-flex flex-column p-3 ${sidebarOpen ? "open" : ""}`}
-          style={{ zIndex: 1000, position: sidebarOpen ? "fixed" : undefined }}
-        >
-          <h3 className="text-center mb-4">Admin Panel</h3>
-          <Nav className="flex-column nav-list flex-grow-1">
-            <Nav.Link
-              className={`text-white mb-2 ${activeView === "home" ? "fw-bold" : ""}`}
-              onClick={() => handleNav("home")}
-            >
-              <FaHome className="me-2" /> Inicio
-            </Nav.Link>
-
-            <Nav.Link
-              className={`text-white mb-2 ${activeView === "usuarios" ? "fw-bold" : ""}`}
-              onClick={() => handleNav("usuarios")}
-            >
-              <FaUsers className="me-2" /> Trabajadores
-            </Nav.Link>
-
-            <Nav.Link
-              className={`text-white mb-2 ${activeView === "lista-trabajadores" ? "fw-bold" : ""}`}
-              onClick={() => handleNav("lista-trabajadores")}
-            >
-              <i className="bi bi-people-fill me-2"></i> Remuneraciones
-            </Nav.Link>
-
-            {/*  Tickets con badge de notificación */}
-            <Nav.Link
-              className={`text-white mb-2 ${activeView === "tickets" ? "fw-bold" : ""}`}
-              onClick={() => handleNav("tickets")}
-              style={{ position: "relative" }}
-            >
-              <FaTicketAlt className="me-2" /> Tickets
-              {ticketsNuevos > 0 && (
-                <span
-                  style={{
-                    position: "absolute",
-                    top: 4,
-                    right: 8,
-                    background: "#ef4444",
-                    color: "#fff",
-                    borderRadius: "50%",
-                    fontSize: 10,
-                    fontWeight: 700,
-                    minWidth: 18,
-                    height: 18,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: "0 4px",
-                  }}
-                >
-                  {ticketsNuevos > 99 ? "99+" : ticketsNuevos}
-                </span>
-              )}
-            </Nav.Link>
-
-            <Nav.Link
-              className={`text-white mb-2 ${activeView === "reportes" ? "fw-bold" : ""}`}
-              onClick={() => handleNav("reportes")}
-            >
-              <FaChartBar className="me-2" /> Reportes
-            </Nav.Link>
-
-            <Nav.Link
-              className={`text-white mb-2 ${activeView === "config" ? "fw-bold" : ""}`}
-              onClick={() => handleNav("config")}
-            >
-              <FaCogs className="me-2" /> Configuración
-            </Nav.Link>
-          </Nav>
-          <LogoutButton />
+    <div className="sa-root">
+      {/* ── Sidebar ── */}
+      <aside className={`sa-sidebar ${sidebarOpen ? "open" : ""}`}>
+        <div className="sa-sidebar-brand">
+          <span className="sa-brand-dot" style={{ background: "#0ea5e9" }} />
+          Admin Panel
         </div>
 
-        {/* ── Main Content ── */}
-        <div
-          className="flex-grow-1 m-1 p-2 navbar-main-content"
-          style={{ minWidth: 0 }}
-        >
-          <Navbar bg="light" className="shadow-sm px-2">
-            <Button
-              variant="outline-primary"
-              className="d-lg-none me-3"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              ☰
-            </Button>
-            <Navbar.Brand className="text-truncate">
-              Bienvenido <strong>{nombre}</strong>{" "}
-              <i className="bi bi-person-check"></i>
-            </Navbar.Brand>
-          </Navbar>
+        <Nav className="flex-column sa-nav">
+          <Nav.Link className={`sa-nav-link ${activeView === "home" ? "active" : ""}`} onClick={() => go("home")}>
+            <FaHome className="sa-nav-icon" /> Inicio
+          </Nav.Link>
 
-          <Container
-            fluid
-            className="p-3 p-md-4"
-            style={{ background: "#f5f6fa" }}
+          <Nav.Link className={`sa-nav-link ${activeView === "usuarios" ? "active" : ""}`} onClick={() => go("usuarios")}>
+            <FaUsers className="sa-nav-icon" /> Trabajadores
+          </Nav.Link>
+
+          <Nav.Link className={`sa-nav-link ${activeView === "lista-trabajadores" ? "active" : ""}`} onClick={() => go("lista-trabajadores")}>
+            <i className="bi bi-people-fill sa-nav-icon" /> Remuneraciones
+          </Nav.Link>
+
+          <Nav.Link
+            className={`sa-nav-link ${activeView === "tickets" ? "active" : ""}`}
+            onClick={() => go("tickets")}
+            style={{ position: "relative" }}
           >
-            {/* HOME */}
-            {activeView === "home" && (
-              <>
-                <Row className="mb-4 justify-content-center g-3">
-                  <Col xs={12} sm={6} xl={5}>
-                    <CantidadUsuarios />
-                  </Col>
-                  <Col xs={12} sm={6} xl={5}>
-                    <ContadorAsistenciasDiarias />
-                  </Col>
-                </Row>
-
-                <Row className="g-3">
-                  <Col xs={12} sm={6} lg={4}>
-                    <Card className="shadow-sm border-0 h-100">
-                      <Card.Body>
-                        <FaUsers size={40} className="text-primary mb-3" />
-                        <Card.Title>Gestión de Trabajadores</Card.Title>
-                        <Card.Text>
-                          Agregar y gestionar a los trabajadores.
-                        </Card.Text>
-                        <Button
-                          variant="primary"
-                          onClick={() => setActiveView("usuarios")}
-                        >
-                          Gestionar
-                        </Button>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-
-                  {/* ✅ Card tickets con badge */}
-                  <Col xs={12} sm={6} lg={4}>
-                    <Card className="shadow-sm border-0 h-100">
-                      <Card.Body style={{ position: "relative" }}>
-                        {ticketsNuevos > 0 && (
-                          <span
-                            style={{
-                              position: "absolute",
-                              top: 12,
-                              right: 12,
-                              background: "#ef4444",
-                              color: "#fff",
-                              borderRadius: "50%",
-                              fontSize: 11,
-                              fontWeight: 700,
-                              minWidth: 22,
-                              height: 22,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              padding: "0 4px",
-                            }}
-                          >
-                            {ticketsNuevos}
-                          </span>
-                        )}
-                        <FaTicketAlt size={40} className="text-danger mb-3" />
-                        <Card.Title>Tickets de Pago</Card.Title>
-                        <Card.Text>
-                          Gestiona los tickets de remuneración enviados por los
-                          trabajadores.
-                        </Card.Text>
-                        <Button
-                          variant="danger"
-                          onClick={() => handleNav("tickets")}
-                        >
-                          Ver Tickets{" "}
-                          {ticketsNuevos > 0 && `(${ticketsNuevos} nuevos)`}
-                        </Button>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-
-                  <Col xs={12} sm={6} lg={4}>
-                    <Card className="shadow-sm border-0 h-100">
-                      <Card.Body>
-                        <FaChartBar size={40} className="text-success mb-3" />
-                        <Card.Title>Reportes</Card.Title>
-                        <Card.Text>
-                          Visualiza reportes de asistencia, pagos y actividades.
-                        </Card.Text>
-                        <Button
-                          variant="success"
-                          onClick={() => setActiveView("reportes")}
-                        >
-                          Ver Reportes
-                        </Button>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-
-                  <Col xs={12} sm={6} lg={4}>
-                    <Card className="shadow-sm border-0 h-100">
-                      <Card.Body>
-                        <FaCogs size={40} className="text-warning mb-3" />
-                        <Card.Title>Configuración</Card.Title>
-                        <Card.Text>
-                          Ajusta turnos, tolerancias y feriados del sistema.
-                        </Card.Text>
-                        <Button
-                          variant="warning"
-                          onClick={() => setActiveView("config")}
-                        >
-                          Configurar
-                        </Button>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
-              </>
+            <FaTicketAlt className="sa-nav-icon" /> Tickets
+            {ticketsNuevos > 0 && (
+              <span className="sa-nav-badge">{ticketsNuevos > 99 ? "99+" : ticketsNuevos}</span>
             )}
+          </Nav.Link>
 
-            {/* TRABAJADORES */}
-            {activeView === "usuarios" && (
-              <>
-                <div className="mb-3 d-flex gap-2 flex-wrap">
-                  <Button
-                    variant={
-                      activeUserView === "form" ? "primary" : "outline-primary"
-                    }
-                    onClick={() => setActiveUserView("form")}
-                  >
-                    <FaUserPlus className="me-1" /> Registrar Usuario
-                  </Button>
-                  <Button
-                    variant={
-                      activeUserView === "list" ? "primary" : "outline-primary"
-                    }
-                    onClick={() => setActiveUserView("list")}
-                  >
-                    <FaList className="me-1" /> Lista de Trabajadores
-                  </Button>
-                </div>
-                <Suspense fallback={fallback}>
-                  {activeUserView === "form" && <GestionUsuarios />}
-                  {activeUserView === "list" && <ListUser />}
-                </Suspense>
-              </>
-            )}
+          <Nav.Link className={`sa-nav-link ${activeView === "reportes" ? "active" : ""}`} onClick={() => go("reportes")}>
+            <FaChartBar className="sa-nav-icon" /> Reportes
+          </Nav.Link>
 
-            {/* LISTA TRABAJADORES */}
-            {activeView === "lista-trabajadores" && (
-              <Suspense fallback={fallback}>
-                <ListaTrabajadores />
+          <Nav.Link className={`sa-nav-link ${activeView === "config" ? "active" : ""}`} onClick={() => go("config")}>
+            <FaCogs className="sa-nav-icon" /> Configuración
+          </Nav.Link>
+        </Nav>
+
+        <div className="sa-sidebar-footer">
+          <LogoutButton />
+        </div>
+      </aside>
+
+      {/* ── Main ── */}
+      <div className="sa-main">
+        {/* Topbar */}
+        <header className="sa-topbar">
+          <button className="sa-burger d-lg-none" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <span /><span /><span />
+          </button>
+          <div className="sa-topbar-user">
+            <div className="sa-user-avatar" style={{ background: "linear-gradient(135deg,#0ea5e9,#6366f1)" }}>
+              {nombre.charAt(0)}
+            </div>
+            <div>
+              <p className="sa-user-greeting">Bienvenido de vuelta</p>
+              <p className="sa-user-name">{nombre}</p>
+            </div>
+          </div>
+        </header>
+
+        <div className="sa-content">
+          {/* ── HOME ── */}
+          {activeView === "home" && (
+            <>
+              <div className="sa-page-title">
+                <h4>Panel de Administración</h4>
+                <span className="sa-page-date">
+                  {new Date().toLocaleDateString("es-PE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                </span>
+              </div>
+
+              {/* Stats row — reutiliza los componentes existentes + stat cards */}
+              <div className="sa-stats-grid sa-stats-grid--admin">
+                {/* Componentes originales envueltos */}
+                <div className="sa-wrapped-stat"><CantidadUsuarios /></div>
+                <div className="sa-wrapped-stat"><ContadorAsistenciasDiarias /></div>
+                <StatCard
+                  label="Tickets Nuevos"
+                  value={ticketsNuevos}
+                  loading={false}
+                  color="#ef4444"
+                  icon={FaTicketAlt}
+                  onClick={() => go("tickets")}
+                  subtitle="Pendientes de revisión"
+                  badge={ticketsNuevos}
+                />
+              </div>
+
+              {/* Action cards */}
+              <h6 className="sa-section-title">Accesos rápidos</h6>
+              <div className="sa-actions-grid">
+                <ActionCard title="Gestión de Trabajadores" desc="Registrar y administrar el personal de tu sede."            color="#6366f1" icon={FaUsers}     btnLabel="Gestionar"     onClick={() => go("usuarios")} />
+                <ActionCard title="Tickets de Pago"         desc="Revisa los tickets de remuneración enviados por el personal." color="#ef4444" icon={FaTicketAlt} btnLabel="Ver Tickets"   onClick={() => go("tickets")} badge={ticketsNuevos} />
+                <ActionCard title="Reportes"                desc="Visualiza reportes de asistencia, pagos y actividades."      color="#10b981" icon={FaChartBar}  btnLabel="Ver Reportes"  onClick={() => go("reportes")} />
+                <ActionCard title="Configuración"           desc="Ajusta turnos, tolerancias y feriados del sistema."          color="#f59e0b" icon={FaCogs}      btnLabel="Configurar"    onClick={() => go("config")} />
+              </div>
+            </>
+          )}
+
+          {/* ── TRABAJADORES ── */}
+          {activeView === "usuarios" && (
+            <>
+              <div className="sa-tab-bar">
+                <button className={`sa-tab ${activeUserView === "form" ? "active" : ""}`} onClick={() => setActiveUserView("form")}><FaUserPlus className="me-2" />Registrar Usuario</button>
+                <button className={`sa-tab ${activeUserView === "list" ? "active" : ""}`} onClick={() => setActiveUserView("list")}><FaList className="me-2" />Lista de Trabajadores</button>
+              </div>
+              <Suspense fallback={<Fallback />}>
+                {activeUserView === "form" && <GestionUsuarios />}
+                {activeUserView === "list" && <ListUser />}
               </Suspense>
-            )}
+            </>
+          )}
 
-            {/* ✅ TICKETS */}
-            {activeView === "tickets" && (
-              <Suspense fallback={fallback}>
-                <div className="d-flex align-items-center gap-2 mb-4">
-                  <FaTicketAlt size={24} className="text-danger" />
-                  <h4 className="mb-0">Tickets de Remuneración</h4>
+          {/* ── REMUNERACIONES ── */}
+          {activeView === "lista-trabajadores" && (
+            <Suspense fallback={<Fallback />}><ListaTrabajadores /></Suspense>
+          )}
+
+          {/* ── TICKETS ── */}
+          {activeView === "tickets" && (
+            <Suspense fallback={<Fallback />}>
+              <div className="sa-page-title">
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <h4 style={{ margin: 0 }}>Tickets de Remuneración</h4>
                   {ticketsNuevos > 0 && (
-                    <span className="badge bg-danger">
+                    <span style={{ background: "#ef4444", color: "#fff", borderRadius: 20, fontSize: 12, fontWeight: 700, padding: "2px 10px" }}>
                       {ticketsNuevos} nuevos
                     </span>
                   )}
                 </div>
-                <ReceptorTickets />
-              </Suspense>
-            )}
+              </div>
+              <ReceptorTickets />
+            </Suspense>
+          )}
 
-            {/* REPORTES */}
-            {activeView === "reportes" && (
-              <Suspense fallback={fallback}>
-                <ReporteAsistencia />
-              </Suspense>
-            )}
+          {/* ── REPORTES ── */}
+          {activeView === "reportes" && (
+            <Suspense fallback={<Fallback />}><ReporteAsistencia /></Suspense>
+          )}
 
-            {/* CONFIGURACIÓN */}
-            {activeView === "config" && (
-              <Suspense fallback={fallback}>
-                <ConfiguracionesAdmin />
-              </Suspense>
-            )}
-          </Container>
+          {/* ── CONFIG ── */}
+          {activeView === "config" && (
+            <Suspense fallback={<Fallback />}><ConfiguracionesAdmin /></Suspense>
+          )}
         </div>
       </div>
+
+      {/* Overlay móvil */}
+      {sidebarOpen && <div className="sa-overlay" onClick={() => setSidebarOpen(false)} />}
+
+
     </div>
   );
 };

@@ -7,6 +7,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 // import LoginSuperAdmin from "./components/admin/LoginSuperAdmin";   // <-- AGREGADO
 import DashboardUser from "./pages/dashboardUser";
 import DashboardAdmin from "./pages/dashboardAdmin";
+
+// SuperAdministrador
 import DashboardSuperAdmin from "./pages/dashboardSuperAdmin";
 import PrivateRoute from "./components/PrivateRoute";
 // import Asistencia from "./pages/Asistencia";

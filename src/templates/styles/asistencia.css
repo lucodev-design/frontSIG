@@ -8,6 +8,7 @@
 
 .asistencia-root {
   min-height: 100vh;
+  width: 100%;
   background: #0a0a0f;
   color: #e8e8f0;
   font-family: 'DM Sans', sans-serif;
@@ -82,25 +83,11 @@
   transition: background 0.4s ease;
 }
 
-.ring--idle {
-  --ring-color: rgba(255, 255, 255, 0.1);
-}
-
-.ring--escaneando {
-  --ring-color: linear-gradient(135deg, #6366f1, #22d3ee);
-}
-
-.ring--loading {
-  --ring-color: linear-gradient(135deg, #f59e0b, #fb923c);
-}
-
-.ring--success {
-  --ring-color: linear-gradient(135deg, #22d3ee, #4ade80);
-}
-
-.ring--error {
-  --ring-color: linear-gradient(135deg, #f87171, #fb923c);
-}
+.ring--idle     { --ring-color: rgba(255, 255, 255, 0.1); }
+.ring--escaneando { --ring-color: linear-gradient(135deg, #6366f1, #22d3ee); }
+.ring--loading  { --ring-color: linear-gradient(135deg, #f59e0b, #fb923c); }
+.ring--success  { --ring-color: linear-gradient(135deg, #22d3ee, #4ade80); }
+.ring--error    { --ring-color: linear-gradient(135deg, #f87171, #fb923c); }
 
 .video-frame {
   position: relative;
@@ -210,16 +197,21 @@
 }
 
 /* ── Usuario card ── */
+/* Ancho igual al lector QR (.asistencia-main → max-width 420px) */
 .usuario-card {
   width: 100%;
+  max-width: 420px;           /* ✅ mismo ancho máximo que el QR */
   display: flex;
   align-items: center;
   gap: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 10, 20, 0.45);  /* ✅ más transparente */
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 16px;
   padding: 16px;
   animation: fadeSlide 0.4s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
 .usuario-avatar {
@@ -269,9 +261,7 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.meta-chip--estado {
-  padding: 1px;
-}
+.meta-chip--estado { padding: 1px; }
 
 .meta-chip--presente {
   background: rgba(74, 222, 128, 0.1);
@@ -362,53 +352,56 @@
   transform: translateY(0);
 }
 
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .asistencia-root {
+    padding: 16px 12px;
+    gap: 14px;
+  }
+
+  .asistencia-main,
+  .usuario-card,
+  .asistencia-footer {
+    max-width: 100%;   /* en móvil ocupa todo el ancho disponible */
+  }
+
+  .usuario-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+
+  .usuario-nombre {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .asistencia-main,
+  .usuario-card,
+  .asistencia-footer {
+    max-width: 420px;
+  }
+}
+
 /* ── Animations ── */
 @keyframes blink {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.3;
-  }
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
 }
 
 @keyframes scanMove {
-  0% {
-    top: 10%;
-    opacity: 0;
-  }
-
-  10% {
-    opacity: 0.7;
-  }
-
-  90% {
-    opacity: 0.7;
-  }
-
-  100% {
-    top: 90%;
-    opacity: 0;
-  }
+  0%   { top: 10%; opacity: 0; }
+  10%  { opacity: 0.7; }
+  90%  { opacity: 0.7; }
+  100% { top: 90%; opacity: 0; }
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes fadeSlide {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

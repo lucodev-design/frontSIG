@@ -1,38 +1,42 @@
 import React, { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { Spinner, Nav, Navbar, Button } from "react-bootstrap";
-import {  FaUsers,  FaBuilding,  FaCogs,  FaChartLine,  FaAngleDown,  FaAngleUp,  FaUserPlus,  FaList,  FaHome,} from "react-icons/fa";
-import "../templates/styles/dashboardSuperadmin-shared.css";
+import {
+  FaUsers,
+  FaBuilding,
+  FaCogs,
+  FaChartLine,
+  FaAngleDown,
+  FaAngleUp,
+  FaUserPlus,
+  FaList,
+  FaHome,
+} from "react-icons/fa";
+
 import LogoutButton from "../components/logout.jsx";
-import { getSedes, getAdmins, getUsers } from "../api/api";
+import { getSedes, getAdmins, getUsers } from "../api/api.js";
+
+import "../templates/styles/dashboardSuperAdmin-shared.css";
 
 // Lazy loads
-const GestionUsuarios = lazy(
-  () => import("../pages/AdminPages/GestionUsuario.jsx"),
-);
-const ListUser = lazy(() => import("../pages/AdminPages/ListUser.jsx"));
+const GestionUsuarios = lazy(() => import("./AdminPages/GestionUsuario.jsx"));
+const ListUser = lazy(() => import("./AdminPages/ListUser.jsx"));
 const GestionSedes = lazy(
-  () => import("../pages/SuperAdminPages/GestionSedesSuperAdmin.jsx"),
+  () => import("./SuperAdminPages/GestionSedesSuperAdmin.jsx"),
 );
 const GestionRoles = lazy(
-  () => import("../pages/SuperAdminPages/GestionRolesSuperAdmin.jsx"),
+  () => import("./SuperAdminPages/GestionRolesSuperAdmin.jsx"),
 );
 const ConfiguracionGlobal = lazy(
-  () => import("../pages/SuperAdminPages/SoporteSuperAdmin/SoporteAdmin.jsx"),
+  () => import("./SuperAdminPages/SoporteSuperAdmin/SoporteAdmin.jsx"),
 );
 const ReportesGenerales = lazy(
   () => import("./SuperAdminPages/ReportesGenerales.jsx"),
 );
-const CrearAdmin = lazy(
-  () => import("../pages/SuperAdminPages/CrearAdmin.jsx"),
-);
-const ListaAdmins = lazy(
-  () => import("../pages/SuperAdminPages/ListAdmin.jsx"),
-);
-const ListGeneral = lazy(
-  () => import("../pages/SuperAdminPages/ListGeneral.jsx"),
-);
-const AggUsuario = lazy(() => import("../pruebasHooks/AggUsuario"));
+const CrearAdmin = lazy(() => import("./SuperAdminPages/CrearAdmin.jsx"));
+const ListaAdmins = lazy(() => import("./SuperAdminPages/ListAdmin.jsx"));
+const ListGeneral = lazy(() => import("./SuperAdminPages/ListGeneral.jsx"));
+const AggUsuario = lazy(() => import("../pruebasHooks/AggUsuario.jsx"));
 
 // ─── Componente de stat card animada ─────────────────────────────────────────
 const StatCard = ({

@@ -7,7 +7,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 // import LoginSuperAdmin from "./components/admin/LoginSuperAdmin";   // <-- AGREGADO
 import DashboardUser from "./pages/dashboardUser";
 import DashboardAdmin from "./pages/dashboardAdmin";
-import DashboardSuperAdmin from "./pages/DashboardSuperAdmin";
+import DashboardSuperAdmin from "./pages/dashboardSuperAdmin";
 import PrivateRoute from "./components/PrivateRoute";
 // import Asistencia from "./pages/Asistencia";
 import AggUsuario from "./pruebasHooks/AggUsuario";
@@ -23,7 +23,7 @@ import Asistencias from "./pages/Asistencias";
 // Access Selector
 import AccessSelector from "./components/AccessSelector";
 
-// 
+//
 // import ListaTrabajadores from "./pages/AdminPages/pass/ListaTrabajadores";
 
 import "./App.css";
@@ -32,7 +32,6 @@ function App() {
   return (
     <Router>
       <Routes>
-
         {/* Página principal: Selector de acceso */}
         <Route path="/selector" element={<AccessSelector />} />
 
@@ -113,7 +112,6 @@ function App() {
             <h2 className="text-center mt-10">404 - Página no encontrada</h2>
           }
         />
-
       </Routes>
     </Router>
   );

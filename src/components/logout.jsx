@@ -16,7 +16,8 @@ export default function LogoutButton() {
       onClick={handleLogout} 
       className="btn btn-danger mt-auto"
     >
-      Cerrar sesión
+      <i className="bi bi-box-arrow-in-right"></i>
+      {/* Cerrar sesión */}
     </button>
   );
 }

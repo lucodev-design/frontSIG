@@ -296,6 +296,7 @@ const DashboardSuperAdmin = () => {
               <p className="sa-user-greeting">Bienvenido de vuelta</p>
               <p className="sa-user-name">{nombre}</p>
             </div>
+            <LogoutButton/>
           </div>
         </header>
 

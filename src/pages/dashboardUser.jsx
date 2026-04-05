@@ -422,6 +422,7 @@ const DashboardUser = () => {
                 {primerNombre} {primerApellido}
               </p>
             </div>
+            <LogoutButton/>
           </div>
         </header>
 

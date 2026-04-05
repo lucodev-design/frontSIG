@@ -1,18 +1,7 @@
 import React, { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { Spinner, Nav, Navbar, Button } from "react-bootstrap";
-import {
-  FaUsers,
-  FaBuilding,
-  FaCogs,
-  FaChartLine,
-  FaAngleDown,
-  FaAngleUp,
-  FaUserPlus,
-  FaList,
-  FaHome,
-} from "react-icons/fa";
-
+import { FaUsers,  FaBuilding, FaCogs,  FaChartLine,  FaAngleDown,  FaAngleUp,  FaUserPlus,  FaList,  FaHome,} from "react-icons/fa";
 import LogoutButton from "../components/logout.jsx";
 import { getSedes, getAdmins, getUsers } from "../api/api.js";
 

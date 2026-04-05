@@ -9,7 +9,7 @@ import DashboardUser from "./pages/dashboardUser";
 import DashboardAdmin from "./pages/dashboardAdmin";
 
 // SuperAdministrador
-import DashboardSuperAdmin from "./pages/dashboardSuperAdmin";
+import DashboardSuperAdmin from "./pages/DashboardSuperAdmin";
 import PrivateRoute from "./components/PrivateRoute";
 // import Asistencia from "./pages/Asistencia";
 import AggUsuario from "./pruebasHooks/AggUsuario";

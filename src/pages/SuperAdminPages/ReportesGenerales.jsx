@@ -1,24 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
-import {
-  Button,
-  Form,
-  Card,
-  Row,
-  Col,
-  Table,
-  Spinner,
-  Alert,
-  Badge,
-} from "react-bootstrap";
-import {
-  getSedes,
-  getUsuariosPorSede,
-  generarReporteConsolidado,
-  generarReportePorSede,
-  generarReportePorTrabajador,
-  exportarReporteExcel,
-  exportarReportePDF,
-} from "../../api/api.js";
+import {  Button,  Form,  Card,  Row,  Col,  Table,  Spinner,  Alert,  Badge,} from "react-bootstrap";
+import {  getSedes,  getUsuariosPorSede, generarReporteConsolidado,  generarReportePorSede,  generarReportePorTrabajador,  exportarReporteExcel,  exportarReportePDF,} from "../../api/api.js";
 import { FaFileExcel, FaFilePdf, FaSearch, FaChartLine } from "react-icons/fa";
 
 const FILTROS_INICIAL = {
@@ -49,6 +31,12 @@ const MESES = [
 ];
 
 // ✅ Calcula estadísticas desde las filas según el tipo de reporte
+// ✅ Pega esto al inicio de tu ReportesGenerales.jsx
+// Reemplaza la función calcularEstadisticasFrontend existente
+
+const ESTADOS_PRESENTE = ["A Tiempo", "Salida Normal", "Salida Tolerada"];
+const ESTADOS_TARDANZA = ["Tarde/Descuento", "Salida Temprana/Descuento"];
+
 const calcularEstadisticasFrontend = (rows, tipoReporte) => {
   if (!rows || rows.length === 0) return null;
 
@@ -58,43 +46,30 @@ const calcularEstadisticasFrontend = (rows, tipoReporte) => {
 
   if (tipoReporte === "consolidado") {
     // Cada fila es una sede con columnas: asistencias, tardanzas, faltas
-    total_asistencias = rows.reduce(
-      (s, r) => s + (parseInt(r.asistencias) || 0),
-      0,
-    );
-    total_tardanzas = rows.reduce(
-      (s, r) => s + (parseInt(r.tardanzas) || 0),
-      0,
-    );
-    total_faltas = rows.reduce((s, r) => s + (parseInt(r.faltas) || 0), 0);
+    total_asistencias = rows.reduce((s, r) => s + (parseInt(r.asistencias) || 0), 0);
+    total_tardanzas   = rows.reduce((s, r) => s + (parseInt(r.tardanzas) || 0), 0);
+    total_faltas      = rows.reduce((s, r) => s + (parseInt(r.faltas) || 0), 0);
+
   } else if (tipoReporte === "sede") {
     // Cada fila es un trabajador con: dias_presente, dias_tardanza, dias_falta
-    total_asistencias = rows.reduce(
-      (s, r) => s + (parseInt(r.dias_presente) || 0),
-      0,
-    );
-    total_tardanzas = rows.reduce(
-      (s, r) => s + (parseInt(r.dias_tardanza) || 0),
-      0,
-    );
-    total_faltas = rows.reduce((s, r) => s + (parseInt(r.dias_falta) || 0), 0);
+    total_asistencias = rows.reduce((s, r) => s + (parseInt(r.dias_presente) || 0), 0);
+    total_tardanzas   = rows.reduce((s, r) => s + (parseInt(r.dias_tardanza) || 0), 0);
+    total_faltas      = rows.reduce((s, r) => s + (parseInt(r.dias_falta) || 0), 0);
+
   } else if (tipoReporte === "trabajador") {
-    // Cada fila es un día con columna: estado
-    total_asistencias = rows.filter((r) => r.estado === "Presente").length;
-    total_tardanzas = rows.filter((r) => r.estado === "Tardanza").length;
-    total_faltas = rows.filter((r) => r.estado === "Falta").length;
+    // ✅ Cada fila es un día — usar los estados reales de la DB
+    total_asistencias = rows.filter(r => ESTADOS_PRESENTE.includes(r.estado)).length;
+    total_tardanzas   = rows.filter(r => ESTADOS_TARDANZA.includes(r.estado)).length;
+    total_faltas      = rows.filter(
+      r => !ESTADOS_PRESENTE.includes(r.estado) && !ESTADOS_TARDANZA.includes(r.estado)
+    ).length;
   }
 
   const total = total_asistencias + total_tardanzas + total_faltas;
   const porcentaje_asistencia =
     total > 0 ? ((total_asistencias / total) * 100).toFixed(2) : "0.00";
 
-  return {
-    total_asistencias,
-    total_tardanzas,
-    total_faltas,
-    porcentaje_asistencia,
-  };
+  return { total_asistencias, total_tardanzas, total_faltas, porcentaje_asistencia };
 };
 
 export default function ReportesGenerales() {

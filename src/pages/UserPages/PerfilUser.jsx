@@ -4,6 +4,9 @@ import { Card, Row, Col } from "react-bootstrap";
 import { FaUserCircle } from "react-icons/fa";
 
 const PerfilUser = ({ usuario, AsistenciasComponent }) => {
+
+    console.log(usuario);
+
   return (
     <div className="container py-4">
 
